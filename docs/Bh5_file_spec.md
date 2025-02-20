@@ -38,13 +38,9 @@
 
 |   ------- /Frequency [1D (or more) float]
 
-|   /tn/Images (optional)
+|   /tn/Image (optional)
 
-|   ------- /Shift\_n\_GHz [3D float]
-
-|   ------- /Width\_n\_GHz [3D float]
-
-|   ------- /Amplitude\_n [3D float]
+|   ------- /Index [3D int]
 
 |   /tn/Calibration\_spectra (optional)
 
@@ -99,19 +95,14 @@
 
     It must have the attribute:
       - **‘Unit’ [string]**: specifying the unit (e.g. ‘GHz’, ‘px’) as a string; the possibility of having ‘px’ (or different unit) as a unit allows to accommodate cases when the calibration doesn’t provide absolute frequency (e.g. relative to the calibration material)
-- **‘/tn/Images’** (optional group) containing the reconstructed images as 3D dataset in the format ZYX; the images must always have 3 dimensions, where the unused dimensions can be set to 1:
-  - **‘Index’ [int]**: used to assign the specific pixel to the ‘Analysed\_data’ and ‘/Spectra/Amplitude’
-  - **‘Shift\_n\_GHz’ [float]**
-  - **‘Width\_n\_GHz’ [float]**
-  - **‘Amplitude\_n’ [float]**
-  - Optional additional channels specific of the modality in use (e.g. fit error, gain for stimulated, etc.) 
+- **‘/tn/Image’** (optional group) containing the association between the position in a 3D grid and the data in the ‘Analysed\_data’ group; the order of dimensions is ZYX; the image must always have 3 dimensions, where the unused dimensions can be set to 1:
+  - **‘Index’ [int]**: used to assign the specific pixel to the ‘Analysed\_data’ and ‘/Spectra/Amplitude’; if the scanning is done in non-cartesian coordinates -1 can be included to fill the "empty" pixels
   
-  To comply with definition of an [image object in HDF5](https://docs.hdfgroup.org/hdf5/v1_12/_i_m_g.html)) the datasets
-  ‘Shift\_n\_GHz’, ‘Width\_n\_GHz’, etc. must have the following attributes:
-  - **‘CLASS’ [string]**: "IMAGE"
-  - **‘DISPLAY_ORIGIN’ [string]**: "UL"
-  - **‘IMAGE_VERSION’ [string]**: "1.2" (the current version at the time of writing)
-  - **‘element_size_um’ [float]**: array with 3 elements containing the pixel size (in um) for z, y, x; this is not required by HDF5 but it is used by FIJI to determine the pixel size
+  It also contains the following attributes:
+  - **‘element_size_um’ [float]**: array with 3 elements containing the pixel size (in um) for z, y, x
+  
+  N.B. this group is redundant because, in principle, the 3D grid could be reconstructed from the '/tn/Analyzed\_data/Spatial_position_um', but it is good to have it to avoid computing it every time and also to allow for different way for reconstructing the image (in case it is useful)
+  
 - **‘/tn/Calibration\_spectra’** (optional group) it contains the following datasets (N.B. if the n-th calibration data is the same as a previous timepoint, one can just use the attribute ‘same\_as’ without repeating the data):
   - **‘n’ [float]**: a 1D dataset containing the n-th calibration spectrum (where n is referring to ‘/Analyzed\_data/Calibration\_index’); in case there are multiple calibration materials (or reference frequency, e.g. in case of EOMs) the name of the dataset must be ‘n:m’, where m=0,… correspond to one material (frequency); it can optionally have an attribute **‘Timestamp\_ms’ [float]** corresponding to the milliseconds elapsed from ‘/tn/Calibration\_spectra/Datetime’
 
