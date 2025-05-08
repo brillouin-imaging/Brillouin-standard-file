@@ -109,7 +109,7 @@ All the following groups are inside the ‘/Brillouin\_data’ group:
 
   It must also contains the following attributes:
     - **‘element_size’ [float]**: array with 3 elements containing the pixel size for z, y, x 
-    - **‘element_size_units’ [string]**: array with 3 elements containing the units for the element_size (e.g. 'um') 
+    - **‘element_size_units’ [string]**: string containing the units for all the dimensions in element_size (e.g. 'um') 
   
   N.B. in principle, the 3D grid could be reconstructed from the array '/Scanning/Spatial\_map' (if present), but it is good to have it always defined to avoid computing the assignments of spectra to 3D coordinates every time and also to allow for different way for reconstructing the image (in case it is useful) 
 - **‘/Data_{n}/Parameters’ [float]** (optional): in case ‘PSD’ has more than 2 dimensions (let’s call the number of dimensions of ‘PSD’ *n\_PSD*), ‘Parameters’ must have *n\_PSD*-2 dimensions and contain the parameters at which the spectra were acquired (e.g. for an angle-resolved measurement the angle at which the spectrum was acquired). It must also have the following attributes:
