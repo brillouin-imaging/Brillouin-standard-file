@@ -1,7 +1,7 @@
-# Proposal for version 0.1 of the BLS file format
+# Proposal for version 0.1 of the brim file format
 
 ## General description:
-The BLS file format is designed to store Brillouin spectral data along with the results of its analysis.
+The brim file format (brillouin imaging) is designed to store Brillouin spectral data along with the results of its analysis.
 While it supports the storage of individual spectra acquired under different conditions, its primary focus is on Brillouin microscopy images.
 Brillouin microscopy is a hyperspectral imaging technique, where each pixel in the final 3D image corresponds to a full spectrum. 
 Individual spectra are arranged in a flattened structure within the '/data_{n}/PSD' array.
@@ -19,14 +19,14 @@ These time points are not limited to conventional time-lapse imaging but can als
 - If supported by the underlaying storage, links to internal groups/arrays can be used instead of duplicating the data, if needed
 - Datetimes must be represented as a string in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format
 - For arrays that require units an attribute named 'units' that contains the name of the units as a string must be attached to the array; if an attribute (e.g. named 'attribute_x') needs units, one must add another attribute called 'attribute_x_units' at the same hierarchical level and store the name of the unit as a string
-- Enums should be stored as string (but preferably the library used to generate the BLS file should still expose enums to the user, to avoids typos in the name of the elements)
+- Enums should be stored as string (but preferably the library used to generate the brim file should still expose enums to the user, to avoids typos in the name of the elements)
 
 ## Structure:
 |   /
 
 |   /Brillouin\_data
 
-|   ---- /Metadata (defined in ['BLS_file_metadata'](BLS_file_metadata.md))
+|   ---- /Metadata (defined in ['brim_file_metadata'](brim_file_metadata.md))
 
 |   ---- /Data_{n}
 
@@ -90,13 +90,13 @@ These time points are not limited to conventional time-lapse imaging but can als
 
 ## Detailed description of the content of the file:
 - **‘/’** (root group) must have the following attributes:
-  - **‘BLS_version’ [string]**: version of the specification that the current file is complying with (e.g. ‘0.1’); the version must follow the conventions of [semantic versioning](https://semver.org/)
-  - **‘SubTypeID’ [uint32]**: identifier of the specific subtype BLS file that is being used. ID 0x00000000 to 0x7FFFFFFF have to be agreed upon and defined on the specifications, while 0x80000000 to 0xFFFFFFFF are free to use as custom subtypes; default is 0
+  - **‘brim_version’ [string]**: version of the specification that the current file is complying with (e.g. ‘0.1’); the version must follow the conventions of [semantic versioning](https://semver.org/)
+  - **‘SubTypeID’ [uint32]**: identifier of the specific subtype brim file that is being used. ID 0x00000000 to 0x7FFFFFFF have to be agreed upon and defined on the specifications, while 0x80000000 to 0xFFFFFFFF are free to use as custom subtypes; default is 0
   - **‘Authors’ [string]** (optional): information about the authors of the file (e.g. name, contact, etc...)
   - **‘Lab’ [string]** (optional): information about lab and/or institute where the data was generated
   
 All the following groups are inside the ‘/Brillouin\_data’ group:
-- **‘/Data_{n}’** (group) containing the data of the current timepoint; it doesn’t need to be necessarily a timepoint in a timelapse, it could also be a measurement at different temperature or whatever fits under the concept of subsequent measurements under different conditions (defined in the ‘Conditions’ attribute). It can have any of the attributes defined in ‘Metadata’ (if different), with the naming style ‘GroupName.AttributeName’; specifically, defining the ‘Experiment.Datetime’ attribute is recommended. If the BLS contains only a single timepoint, this group must still be defined and called ‘Data_0’. Additionally it might have the following attributes:
+- **‘/Data_{n}’** (group) containing the data of the current timepoint; it doesn’t need to be necessarily a timepoint in a timelapse, it could also be a measurement at different temperature or whatever fits under the concept of subsequent measurements under different conditions (defined in the ‘Conditions’ attribute). It can have any of the attributes defined in ‘Metadata’ (if different), with the naming style ‘GroupName.AttributeName’; specifically, defining the ‘Experiment.Datetime’ attribute is recommended. If the file contains only a single timepoint, this group must still be defined and called ‘Data_0’. Additionally it might have the following attributes:
   - **‘Conditions_name’ [string]** (optional): contains as many elements as parameters that are varied experimentally. If used ‘Conditions_name_units’ should be also defined
   - **‘Conditions’ [string]** (optional): the values for the parameters used to acquired the data contained in this specific '/Data_{n}' group
 - **‘/Data_{n}/PSD’ [float]**: 2D (or more) array where the first dimension corresponds to the number of spatial positions in the sample (*N\_points*) and the second dimension contains the spectral information. Optionally can have more dimensions, when for each voxel in the sample multiple spectra are acquired (e.g. angle resolved measurements); the new dimensions must be inserted in-between (i.e. the “voxels” and spectral dimensions must always be the first and the last, to make the broadcast of the ‘Frequency’ array easier) 
