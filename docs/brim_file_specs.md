@@ -36,10 +36,6 @@ These time points are not limited to conventional time-lapse imaging but can als
 
 |   ---- ---- /Raw\_data (optional)
 
-|   ---- ---- ---- /Index [1D int]
-
-|   ---- ---- ---- /{r}
-
 |   ---- ---- /Scanning
 
 |   ---- ---- ---- /Spatial\_map (optional)
@@ -86,7 +82,11 @@ These time points are not limited to conventional time-lapse imaging but can als
 
 |   ---- ---- ---- /Index [1D int]
 
-|   ---- ---- ---- /{c} [1D (or more) float]
+|   ---- ---- ---- /{m} [2D float]
+
+|   ---- ---- ---- /Timestamp_{m} [1D float] (optional)
+
+|   ---- ---- ---- /Raw_data (optional)
 
 ## Detailed description of the content of the file:
 - **‘/’** (root group) must have the following attributes:
@@ -101,9 +101,7 @@ All the following groups are inside the ‘/Brillouin\_data’ group:
   - **‘Conditions’ [string]** (optional): the values for the parameters used to acquired the data contained in this specific '/Data_{n}' group
 - **‘/Data_{n}/PSD’ [float]**: 2D (or more) array where the first dimension corresponds to the number of spatial positions in the sample (*N\_points*) and the second dimension contains the spectral information. Optionally can have more dimensions, when for each voxel in the sample multiple spectra are acquired (e.g. angle resolved measurements); the new dimensions must be inserted in-between (i.e. the “voxels” and spectral dimensions must always be the first and the last, to make the broadcast of the ‘Frequency’ array easier) 
 - **‘/Data_{n}/Frequency’ [float]**: it must have the same size as ‘PSD’ or fewer dimensions; in the latter case it will be broadcasted to the size of ‘PSD’ (starting from the right), similarly to [Numpy broadcasting](https://numpy.org/doc/stable/user/basics.broadcasting.html); e.g. if ‘Frequency’ is 1D  and ‘PSD’ is 2D, ‘Frequency’ must have the same length as the second dimension of ‘PSD’ (in this case the result of broadcasting is assuming that the frequency axis is the same for all the spatial positions). 
-- **‘/Data_{n}/Raw\_data’** (optional group):  
-  - **‘Index’ [int]**: zero-based index (<*N\_points*) which associates the first dimension of the ‘PSD’ array to ‘/Data_{n}/Raw\_data/{r}’ (the idea being that the same raw data can be used to generate multiple spectra, for example in the line-scanning)
-  - **‘{r}’** (optional group or array): the actual content depends on the technique; it might be better defined for a specific ‘SubTypeID'.
+- **‘/Data_{n}/Raw\_data’** (optional group): this group should contain the raw data that are used to generate the spectra. The actual structure of the data is left undefined to allow full flexibility (different techniques/intruments might have very different raw data), but it might be better defined for a specific ‘SubTypeID’.
 - **‘/Data_{n}/Scanning/Spatial\_map’** (optional): group containing the 1D float arrays (with length *N\_points*) ‘x’, ‘y’ and ‘z’ which refer to the coordinates on the sample at which the spectrum was acquired; if any of the ‘x’, ‘y’ and ‘z’ arrays is omitted it is considered filled with zeros. The units must be attached to the ‘Spatial\_map’ and not to the individual ‘x’, ‘y’, ‘z’ arrays (i.e. the units are the same for all 3 arrays). If ‘Cartesian\_visualization’ is defined, ‘Spatial\_map’ can be omitted
 - **‘/Data_{n}/Scanning/Cartesian\_visualization’ [3D int]** contains an index which associates the position in the 3D grid to the first dimension in ‘PSD’ (thus obviously the index must be smaller than *N\_points*). The order of dimensions is ZYX and the 3 dimensions must always be present, where the unused dimensions can be set to 1. If the scanning is done in non-cartesian coordinates -1 can be included to fill the "empty" pixels
 
@@ -131,12 +129,13 @@ All the following groups are inside the ‘/Brillouin\_data’ group:
   - **‘Corrections’ [string]**: text describing any corrections that is applied to the fitted data (e.g. for NA broadening, deconvolution, etc.)
   
 - **‘/Data_{n}/Calibration’** (optional group) it contains the following arrays; N.B. if the whole calibration group (or an indivual {m} array) is the same as one in another Data_{n}, one could create a reference to that instead of repeating the data; that implies that, when writing to the file, one must be careful if there are multiple links pointing at the same object:
-  - **‘Index’ [int]**: zero-based index which associates the first dimension of the ‘PSD’ array to ‘/Data_{n}/Calibration/{c}’ (the idea being that, if multiple calibration spectra are acquired while imaging, we need to know which calibration data is used for the current spectrum)
-  - **‘{c}’ [float]**: a 1D array containing the c-th calibration spectrum (in relation to ‘/Data_{n}/Calibration/index’); in case there are multiple calibration materials (or reference frequency, e.g. in case of EOMs) the name of the array must be ‘c:j’, where j=0,… correspond to one material (frequency); it can optionally have an attribute **‘Timestamp’ [float]** corresponding to the milliseconds elapsed from ‘/Data_{n}/Calibration/Datetime’
+  - **‘Index’ [int]**: zero-based index which associates the first dimension of the ‘PSD’ array to the first dimension of ‘/Data_{n}/Calibration/{m}’ (the idea being that, if multiple calibration spectra are acquired while imaging, we need to know which calibration data is used for the current spectrum)
+  - **‘{m}’ [float]**: a 2D array where the first dimension is associated to ‘/Data_{n}/Calibration/index’ (i.e. if multiple calibration spectra are acquired during imaging) and the second dimension contains the spectrum; in case there are multiple calibration materials (or reference frequency, e.g. in case of EOMs) multiple datasets {m} can be created (one for each material). It must have an attribute **‘Shift’ [float]**, which describe the Brillouin shift (or frequency) of the current calibration material.
+  - **‘Timestamp_{m}’ [float]** (optional): a 1D array with the same length as the first dimension of ‘/Data_{n}/Calibration/{m}’ which contains the milliseconds elapsed from ‘/Data_{n}/Calibration/Datetime’.
+  - **‘Raw\_data’** (optional group): a group containing the raw data that are used to generate the calibration spectra; it shoud have the same structure as ‘/Data_{n}/Raw\_data’, if possible.
 
   It also contains the following attributes:
   - **‘Description’ [string]** (optional): it describes how the calibration is performed
   - **‘Temperature’ [float]** (optional): the temperature of the calibration material (if relevant)
   - **‘Datatime’ [string]** (optional): a [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) representation of the time when the (first) calibration spectrum was acquired
-  - **‘Shift\_m’ [string]** (optional): Brillouin shift of the m-th calibration material (or frequency); the name must be ‘Shift\_0’ in case a single material is used.
   - **‘FSR’ [float]** (optional): The free spectral range of the spectrometer (in case it is a parameter that is used for calibration)
