@@ -54,6 +54,8 @@ These time points are not limited to conventional time-lapse imaging but can als
 
 |   ---- ---- /Analysis\_{m}
 
+|   ---- ---- ---- /Thumbnail [2D (or 3D)] (optional)
+
 |   ---- ---- ---- /Shift\_AS\_{p} [1D (or more) float]
 
 |   ---- ---- ---- /Shift\_S\_{p} [1D (or more) float] (optional)
@@ -113,7 +115,10 @@ All the following groups are inside the ‘/Brillouin\_data’ group:
 - **‘/Data_{n}/Parameters’ [float]** (optional): in case ‘PSD’ has more than 2 dimensions (let’s call the number of dimensions of ‘PSD’ *n\_PSD*), ‘Parameters’ must have *n\_PSD-1* dimensions, where the first *n\_PSD-2* dimensions correspond to the parameters at which the spectra were acquired and the last one contains *n\_PSD-2* elements storing the actual values of the parameters (e.g. for an angle-resolved measurement the angle at which the spectrum was acquired). It must also have the following attributes:
     - **‘Name’ [string]**: a 1D array with size *n\_PSD*-2 containing the names of the parameters including the unit (e.g. ‘Angle_deg’)
 - **‘/Data_{n}/Timestamp’ [float]** (optional): milliseconds from the beginning of the experiment, as defined in the ‘datetime’ attribute of the current ‘Data_{n}’ group (if defined, or arbritary otherwise) when the current spectrum was acquired
-- **‘/Data_{n}/Analysis\_{m}’** (group) contains the results of the analysis on the spectral data; the index 'm' allows for the case of multiple pipelines being performed on the same data (in that case a group for each of them must be created). It contains the following arrays. All arrays must be 1D with the length *N\_points*. The arrays containing the parameters extracted from the spectra (i.e. Shift\_AS\_{i}, etc.) can have more dimensions, in order to match the dimensions in the PSD array. They can optionally have both the results for anti-Stokes and Stokes, in case both are present (the raccomandation is to use the average between the two, when displaying the image). Note that the way one should think about the PSD array and the arrays in 'Analysis\_{m}' is like a table containing a list of voxels acquired in the sample with their corresponding Brillouin shift, width, etc.
+- **‘/Data_{n}/Analysis\_{m}’** (group) contains the results of the analysis on the spectral data; the index 'm' allows for the case of multiple pipelines being performed on the same data (in that case a group for each of them must be created).
+  - **‘Thubnail’** (optional): an image that can be used to show a preview of this specific ‘Analysis\_{m}’ group. It can be a 2D array for grayscale or 3D where the last channel represents the color (RGB).
+  
+  Additionally, it contains the following arrays. All arrays must be 1D with the length *N\_points*. The arrays containing the parameters extracted from the spectra (i.e. Shift\_AS\_{i}, etc.) can have more dimensions, in order to match the dimensions in the PSD array. They can optionally have both the results for anti-Stokes and Stokes, in case both are present (the raccomandation is to use the average between the two, when displaying the image). Note that the way one should think about the PSD array and the arrays in 'Analysis\_{m}' is like a table containing a list of voxels acquired in the sample with their corresponding Brillouin shift, width, etc.
   - **‘Shift\_AS\_{p}’ [float]**: p=0,… if multiple peaks are fitted
   - **‘Width\_AS\_{p}’ [float]**: p=0,… if multiple peaks are fitted
   - **‘Amplitude\_AS\_{p}’ [float]**: p=0,… if multiple peaks are fitted
