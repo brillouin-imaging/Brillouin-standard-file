@@ -33,6 +33,8 @@ Therefore, also based on the discussion in [issue #1](https://github.com/prevede
 we advocate for the use of Zarr as a container for the brim file and we plan to only fully support Zarr.
 
 ## How to read/write to brim files
+We developed a web app ([BrimView](https://biobrillouin.org/brimview/)) to visualize and process brim files. If you encounter any problem with it, you can open a [GitHub issue](https://github.com/prevedel-lab/BrimView/issues). 
+
 You can use the [brimfile package](https://pypi.org/project/brimfile/), which provides an easy interface to the latest version of the brim file in Python.
 If you encounter any issue with using the library or want to request additional features, you can create a GitHub issue on the page of [the project](https://github.com/prevedel-lab/brimfile/issues).
 
