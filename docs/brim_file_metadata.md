@@ -1,6 +1,6 @@
 # Proposal for metadata in version 0.1 of the brim file format
 
-The following metadata are defined with the aim of making Brillouin measurements interpretable and reproducible; they are based on the [Consensus Statement on Brillouin Light Scattering Microscopy of Biological Materials](https://doi.org/10.48550/arXiv.2411.11712).
+The following metadata are defined with the aim of making Brillouin measurements interpretable and reproducible; they are based on the [Consensus Statement on Brillouin Light Scattering Microscopy of Biological Materials](https://doi.org/10.1038/s41566-025-01681-6).
 The units used the same conventions defined in the [main document](brim_file_specs.md).
 
 ## Structure:

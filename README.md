@@ -49,4 +49,4 @@ information and also, importantly, have a well-defined and common structure so t
 information as possible in an automated fashion.
 
 To provide input or discuss specific issues you can create [GitHub
-issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues).
+issue](https://github.com/prevedel-lab/Brillouin-standard-file/issues).
