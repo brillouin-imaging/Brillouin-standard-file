@@ -1,0 +1,2 @@
+examples/v*/**/*.brim.zip filter=lfs diff=lfs merge=lfs -text
+examples/v*/**/*.brim.zarr/** filter=lfs diff=lfs merge=lfs -text
