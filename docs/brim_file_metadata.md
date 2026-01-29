@@ -5,7 +5,7 @@ The units used the same conventions defined in the [main document](brim_file_spe
 
 ## Structure:
 
-|   /Brillouin\_data/Metadata
+The `Metadata` attribute in the `/Brillouin\_data` has the following hierarchy (in JSON they are basically nested objects):
 
 |   ---- ---- /Experiment
 
@@ -21,13 +21,13 @@ The units used the same conventions defined in the [main document](brim_file_spe
 
 
 ## Detailed description of the metadata in the file:
-- **‘/Experiment’** (group) has the following attributes:
+- **‘/Experiment’** has the following nested attributes:
   - **‘Datatime’ [string]** (optional): a [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html): time when the experiment was started 
   - **‘Temperature’ [float]** (optional): the temperature measured as close as possible to the sample
   - **‘Temperature\_uncertainty’ [float]** (optional)
   - **‘Sample’ [string]** (optional): description of the sample being imaged
   - **‘Info’ [string]** (optional): any additional description that the user can input to describe the experiment
-- **‘/Optics’** (group) has the following attributes:
+- **‘/Optics’**  has the following nested attributes:
   - **‘Wavelength’ [float]**: wavelength of the laser used for the measurements
   - **‘Power’ [float]**: total optical power on the sample
   - **‘Resolution_x’ [float]**
@@ -38,20 +38,20 @@ The units used the same conventions defined in the [main document](brim_file_spe
   - **‘Immersion\_medium’ [enum{other, air, water, oil}]**: the immersion medium used for the objective lens
   - **‘Objective\_model’ [string]** (optional): the description of the objective lens being used, including the manufacturer and magnification
   - **‘Laser\_model’ [string]** (optional)
-- **‘/Brillouin’** (group) has the following attributes:
+- **‘/Brillouin’** has the following nested attributes:
   - **‘Signal\_type’ [enum {other, spontaneous, stimulated, time\_resolved}]**
   - **‘Scattering\_angle’ [float]**: the average scattering angle (i.e. between the optical axes of the illumination and detection); 180deg corresponds to backscattering
   - **‘Phonons\_measured’ [enum{other, longitudinal-like, transverse-like, longitudinal-&transverse-like}]**
   - **‘Polarization\_probed\_analyzed’ [enum{other, V-H, H-V, H-H, V-V, V-Unpolarized, Circular-Circular}]**
   - **‘Shift_precision’ [float]**
   - **‘Width_precision’ [float]**
-- **‘/Acquisition’** (group) has the following attributes:
+- **‘/Acquisition’** has the following nested attributes:
   - **‘Scanning\_strategy’ [enum {other, point\_scanning, line\_scanning, lightsheet, time\_resolved}]**
   - **‘Acquisition\_time’ [float]**: the time that takes to acquire a single ‘unit’, which is different depending on the scanning strategy (i.e. point, line, plane, A-line, etc.)
-- **‘/Spectrometer’** (group) containing the dataset:
+- **‘/Spectrometer’** containing the array:
   - **IRF [float]** (optional): a 1D array containing the impulse response function of the spectrometer. It must have an attribute ‘Frequency’ [float] (with the corresponding ‘Frequency_units’ [string]) of the same length, containing the frequency axis.  
 
-  And the attributes:
+  And the nested attributes:
     - **‘Type’ [enum{other, VIPA, Fabry_Perot, stimulated, heterodyne, time\_domain, impulsive}]**
     - **‘Resolution’ [float]**    
     - **‘Detector\_type’ [enum{other, EM-CCD, CCD, sCMOS, PMT, balanced, single_PD, single_APD}]** (optional)

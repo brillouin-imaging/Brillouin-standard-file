@@ -26,8 +26,6 @@ These time points are not limited to conventional time-lapse imaging but can als
 
 |   /Brillouin\_data
 
-|   ---- /Metadata (defined in ['brim_file_metadata'](brim_file_metadata.md))
-
 |   ---- /Data_{n}
 
 |   ---- ---- /PSD
@@ -97,9 +95,12 @@ These time points are not limited to conventional time-lapse imaging but can als
   - **‘Subtype_features’ [string]** (optional): an array of strings listing all the features that the current subtype supports (as defined in ['brim_file_subtypes'](brim_file_subtypes.md))
   - **‘Authors’ [string]** (optional): information about the authors of the file (e.g. name, contact, etc...)
   - **‘Lab’ [string]** (optional): information about lab and/or institute where the data was generated
+
+
+- **‘/Brillouin\_data’** (group) must have an attribute ‘Metadata’ containing the metadata, as defined in ['brim_file_metadata'](brim_file_metadata.md).
   
 All the following groups are inside the ‘/Brillouin\_data’ group:
-- **‘/Data_{n}’** (group) containing the data of the current timepoint; it doesn’t need to be necessarily a timepoint in a timelapse, it could also be a measurement at different temperature or whatever fits under the concept of subsequent measurements under different conditions (defined in the ‘Conditions’ attribute). It can have any of the attributes defined in ‘Metadata’ (if different), with the naming style ‘GroupName.AttributeName’; specifically, defining the ‘Experiment.Datetime’ attribute is recommended. If the file contains only a single timepoint, this group must still be defined and called ‘Data_0’. Additionally it might have the following attributes:
+- **‘/Data_{n}’** (group) containing the data of the current timepoint; it doesn’t need to be necessarily a timepoint in a timelapse, it could also be a measurement at different temperature or whatever fits under the concept of subsequent measurements under different conditions (defined in the ‘Conditions’ attribute). It can have any of the attributes defined in ‘Metadata’ (if different), with the naming style ‘Type.AttributeName’; specifically, defining the ‘Experiment.Datetime’ attribute is recommended. If the file contains only a single timepoint, this group must still be defined and called ‘Data_0’. Additionally it might have the following attributes:
   - **‘Conditions_name’ [string]** (optional): contains as many elements as parameters that are varied experimentally. If used ‘Conditions_name_units’ should be also defined
   - **‘Conditions’ [string]** (optional): the values for the parameters used to acquired the data contained in this specific '/Data_{n}' group
 - **‘/Data_{n}/PSD’ [float]**: 2D (or more) array where the first dimension corresponds to the number of spatial positions in the sample (*N\_points*) and the second dimension contains the spectral information. Optionally can have more dimensions, when for each voxel in the sample multiple spectra are acquired (e.g. angle resolved measurements); the new dimensions must be inserted in-between (i.e. the “voxels” and spectral dimensions must always be the first and the last, to make the broadcast of the ‘Frequency’ array easier) 
