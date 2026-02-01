@@ -1,0 +1,598 @@
+id: https://github.com/prevedel-lab/Brillouin-standard-file
+name: brim_main
+title: Brim File Format (v0.1) - LinkML Schema
+description: |
+  LinkML schema capturing the structure and data of a BRIm file.
+  
+  Command sequence -
+    gen-json-schema schema/brim_main.yaml > schema/brim_raw.json
+license: GPL-3.0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  brim: https://github.com/prevedel-lab/Brillouin-standard-file/
+default_prefix: brim
+default_range: string
+
+imports:
+  - linkml:types
+  - brim_metadata
+
+classes:
+# classes to define the elements in a zarr file
+  Group:
+    abstract: true
+    description: A group in a zarr file
+    attributes:
+      name:
+        identifier: true
+        required: true
+        range: string
+  Array:
+    abstract: true
+    description: An array in a zarr file
+    attributes:
+      name:
+        identifier: true
+        required: true
+        range: string
+      shape:
+        required: true
+        multivalued: true
+      data_type:
+        range: string
+  # classes defining the .brim file
+  BrimFile:
+    tree_root: true
+    is_a: Group
+    description: |
+      Root group of a BRIM file. Contains global file metadata and the main Brillouin data group.
+      
+      ## General description:
+      The brim file format (brillouin imaging) is designed to store Brillouin spectral data along with the results of its analysis.
+      While it supports the storage of individual spectra acquired under different conditions, its primary focus is on Brillouin microscopy images.
+      Brillouin microscopy is a hyperspectral imaging technique, where each pixel in the final 3D image corresponds to a full spectrum. 
+      Individual spectra are arranged in a flattened structure within the '/data_{n}/PSD' array.
+      In this format, the first dimension represents the spatial position, while the second dimension contains the spectral information.
+      The mapping of these spectra to a 3D image is done through the '/data_{n}/Scanning/Cartesian_visualization' array.
+      Additionally, the '/data_{n}' groups enable the storage of multiple acquisitions, referred to as time points.
+      These time points are not limited to conventional time-lapse imaging but can also represent variations in experimental conditions, such as temperature, osmolarity, or other environmental factors.
+
+      ## General features:
+      - The terminology used in this document is the one of [Zarr](https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html#concepts-and-terminology), even though these specifications only define the structure of the file and are thus not restricted to Zarr
+      - The specification defines the minimum set of groups/arrays/attributes that must be implemented. More can be added while still complying with the specs
+      - The exact name of the fields defined by the specification must be used (case sensitive)
+      - Avoid using symbols that are special characters in popular languages (e.g. '(', '=', '+', etc.) in names of arrays/attributes
+      - Compression and filters to individual arrays can be used
+      - If supported by the underlaying storage, links to internal groups/arrays can be used instead of duplicating the data, if needed
+      - Datetimes must be represented as a string in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format
+      - For arrays that require units an attribute named 'units' that contains the name of the units as a string must be attached to the array; if an attribute (e.g. named 'attribute_x') needs units, one must add another attribute called 'attribute_x_units' at the same hierarchical level and store the name of the unit as a string
+      - Enums should be stored as string (but preferably the library used to generate the brim file should still expose enums to the user, to avoids typos in the name of the elements)
+    attributes:
+      brim_version:
+        description: Version of the BRIM specification that the current file complies with (e.g., 0.1). Must follow [semantic versioning](https://semver.org/) conventions.
+        required: true
+        range: string
+      Subtype:
+        description: |
+          Identifier of the specific subtype of the current file.
+          The idea is that specific implementations of Brillouin might standardize additional groups, arrays or attributes (features).
+          Subtypes (and corresponding features) must be defined in 'brim_file_subtypes'.
+          When present, it is reccomended to include also ‘Subtype_features’
+        required: false
+        range: string
+      Subtype_features:
+        description: Array of strings listing all features that the current subtype supports.
+        required: false
+        multivalued: true
+        range: string
+      Authors:
+        description: Information about the authors of the file (e.g., name or contact or institution).
+        required: false
+        range: string
+      Lab:
+        description: Information about the lab and/or institute where the data was generated.
+        required: false
+        range: string
+      Brillouin_data:
+        description: Main group containing all Brillouin spectral data and metadata.
+        required: true
+        range: BrillouinData
+    rules:
+      - preconditions:
+          slot_conditions:
+            Subtype
+        postconditions:
+          slot_conditions:
+            Subtype_features:
+              recommended: true
+
+  BrillouinData:
+    is_a: Group
+    description: Main group containing metadata and all data acquisitions (Data groups). Includes global metadata applicable to all acquisitions.
+    attributes:
+      Metadata:
+        required: true
+        range: Metadata
+      Data:
+        description: Array of Data groups (Data_0 or Data_1 etc.), each representing an acquisition under specific conditions (timepoint or temperature etc.).
+        required: true
+        multivalued: true
+        range: DataGroup
+        inlined_as_list: false
+        inlined: true
+
+  DataGroup:
+    is_a: Group
+    description: |
+      Data group representing a single acquisition (timepoint/condition).
+      This schema defines the structure of each individual Data group.
+    slot_usage:
+      # In actual files, these groups must be named Data_0, Data_1, Data_2, etc.
+      name:
+        pattern: "^Data_\\d*$"
+    rules:
+      - description: PSD shape must match N_points and N_freq
+        preconditions:
+          slot_conditions:
+            PSD:
+              required: true
+            N_points:
+              required: true
+            N_freq:
+              required: true
+        postconditions:
+          slot_conditions:
+            PSD:
+              equals_expression: "shape[0] == N_points and shape[1] == N_freq"
+
+      - description: Frequency shape must match N_freq (1D)
+        preconditions:
+          slot_conditions:
+            Frequency:
+              required: true
+            N_freq:
+              required: true
+        postconditions:
+          slot_conditions:
+            Frequency:
+              equals_expression: "shape[0] == N_freq"
+
+      - description: Spatial_map vectors must match N_points when present
+        preconditions:
+          slot_conditions:
+            Scanning.Spatial_map:
+              required: false
+        postconditions:
+          slot_conditions:
+            Scanning.Spatial_map.x:
+              equals_expression: "shape[0] == N_points"
+            Scanning.Spatial_map.y:
+              equals_expression: "shape[0] == N_points"
+            Scanning.Spatial_map.z:
+              equals_expression: "shape[0] == N_points"
+
+      - description: Cartesian_visualization shape must match Nz, Ny, Nx
+        preconditions:
+          slot_conditions:
+            Scanning.Cartesian_visualization:
+              required: true
+            Nz:
+              required: true
+            Ny:
+              required: true
+            Nx:
+              required: true
+        postconditions:
+          slot_conditions:
+            Scanning.Cartesian_visualization.index:
+              equals_expression: "shape[0] == Nz and shape[1] == Ny and shape[2] == Nx"
+
+      - description: Analysis arrays must match N_points
+        preconditions:
+          slot_conditions:
+            Analyses:
+              required: true
+            N_points:
+              required: true
+        postconditions:
+          slot_conditions:
+            Analyses.Shift_AS:
+              equals_expression: "shape[0] == N_points"
+            Analyses.Width_AS:
+              equals_expression: "shape[0] == N_points"
+            Analyses.Amplitude_AS:
+              equals_expression: "shape[0] == N_points"
+            Analyses.Offset_AS:
+              equals_expression: "shape[0] == N_points"
+
+      - description: Optional Analysis arrays must match N_points when present
+        preconditions:
+          slot_conditions:
+            Analyses:
+              required: true
+            N_points:
+              required: true
+        postconditions:
+          slot_conditions:
+            Analyses.Shift_S:
+              equals_expression: "shape[0] == N_points"
+            Analyses.Width_S:
+              equals_expression: "shape[0] == N_points"
+            Analyses.Amplitude_S:
+              equals_expression: "shape[0] == N_points"
+            Analyses.Offset_S:
+              equals_expression: "shape[0] == N_points"
+            Analyses.Fit_error.RMSE:
+              equals_expression: "shape[0] == N_points"
+            Analyses.Fit_error.R2:
+              equals_expression: "shape[0] == N_points"
+
+      - description: Timestamp length must match N_points when present
+        preconditions:
+          slot_conditions:
+            Timestamp:
+              required: false
+            N_points:
+              required: true
+        postconditions:
+          slot_conditions:
+            Timestamp:
+              equals_expression: "shape[0] == N_points"
+
+    attributes:
+      N_points:
+        description: Number of spatial positions in the sample. All analysis arrays and PSD first dimension must match this value.
+        required: true
+        range: integer
+        minimum_value: 1
+      N_freq:
+        description: Number of frequency points in the spectral dimension. PSD second dimension and Frequency array must match this value.
+        required: true
+        range: integer
+        minimum_value: 1
+      Nx:
+        description: Number of voxels in X dimension of the Cartesian visualization grid.
+        required: true
+        range: integer
+        minimum_value: 1
+      Ny:
+        description: Number of voxels in Y dimension of the Cartesian visualization grid.
+        required: true
+        range: integer
+        minimum_value: 1
+      Nz:
+        description: Number of voxels in Z dimension of the Cartesian visualization grid.
+        required: true
+        range: integer
+        minimum_value: 1
+
+      Conditions_name:
+        description: Names of parameters varied experimentally. Contains as many elements as experimental parameters. If used, Conditions_name_units should also be defined.
+        required: false
+        multivalued: true
+        range: string
+      Conditions:
+        description: Values for the parameters used to acquire the data in this Data group. Corresponds to the parameters named in Conditions_name.
+        required: false
+        multivalued: true
+        range: string
+
+      PSD:
+        description: Power spectral density (2D or more). First dimension corresponds to N_points (spatial positions). Second dimension contains spectral information with N_freq elements. Additional dimensions represent additional parameters (e.g., for angle-resolved measurements).
+        required: true
+        range: FloatArray2D
+      Frequency:
+        description: Frequency axis. Must have the same size as PSD or fewer dimensions. Will be broadcasted to match PSD dimensions (from the right) following NumPy broadcasting rules.
+        required: true
+        range: FloatArray1D
+
+      Raw_data:
+        description: Optional group containing raw data used to generate the spectra. Structure is flexible and may be better defined for specific SubTypes.
+        required: false
+        range: RawData
+      Scanning:
+        description: Group containing spatial mapping and Cartesian visualization information for relating spectra to spatial positions.
+        required: true
+        range: Scanning
+      Parameters:
+        description: Optional group for additional parameters when PSD has more than 2 dimensions. Must have n_PSD-1 dimensions where first n_PSD-2 dimensions match PSD structure and last dimension contains parameter values.
+        required: false
+        range: Parameters
+      Timestamp:
+        description: Optional array of timestamps (milliseconds) from the beginning of the experiment when each spectrum was acquired. Length must match N_points.
+        required: false
+        range: FloatArray1D
+
+      Analyses:
+        is_a: Group
+        description: |
+          Array of analysis result groups (Analysis_0, Analysis_1, etc.), each containing 
+          results from an analysis pipeline applied to the spectral data. In actual files,
+          these should be named Analysis_0, Analysis_1, Analysis_2, etc. This schema
+          defines the structure of each individual Analysis group.
+        required: true
+        multivalued: true
+        range: AnalysisGroup
+
+      Calibration:
+        is_a: Group
+        description: Optional group containing calibration spectra and metadata for intensity calibration.
+        required: false
+        range: Calibration
+
+  RawData:
+    is_a: Group
+    description: Optional group containing raw data used to generate the spectra. The structure is deliberately flexible to allow for different techniques and instruments with varying raw data formats. May be better defined for specific SubTypes.
+    attributes:
+      description:
+        description: Optional description of the raw data content and structure.
+        required: false
+        range: string
+
+  Scanning:
+    is_a: Group
+    description: Group containing spatial mapping and visualization information for relating spectra to their acquisition positions.
+    attributes:
+      Spatial_map:
+        description: Optional group containing 1D float arrays (x, y, z) specifying the coordinates where spectra were acquired. Omitted arrays are considered filled with zeros. Units must be attached to the Spatial_map group, not individual arrays.
+        required: false
+        range: SpatialMap
+      Cartesian_visualization:
+        description: Required 3D integer array (ZYX order) containing indices that map 3D grid positions to PSD array indices. Unused dimensions can be set to 1; -1 indicates empty pixels in non-Cartesian scans.
+        required: true
+        range: CartesianVisualization
+
+  SpatialMap:
+    is_a: Array
+    description: Group containing 1D float arrays specifying spatial coordinates where spectra were acquired. All arrays have length N_points. Omitted x, y, z arrays are considered filled with zeros.
+    attributes:
+      x:
+        description: X coordinate of acquisition positions. Length must equal N_points.
+        required: false
+        range: FloatArray1D
+      y:
+        description: Y coordinate of acquisition positions. Length must equal N_points.
+        required: false
+        range: FloatArray1D
+      z:
+        description: Z coordinate of acquisition positions. Length must equal N_points.
+        required: false
+        range: FloatArray1D
+
+  CartesianVisualization:
+    is_a: Array
+    description: 3D integer array with ZYX ordering containing indices that associate 3D grid positions to PSD array indices. Enables efficient reconstruction of 3D images from flattened spectral data.
+    attributes:
+      index:
+        description: 3D integer array (ZYX order) mapping 3D grid positions to PSD array indices. Values must be less than N_points; -1 indicates empty pixels for non-Cartesian scans.
+        required: true
+        range: IntArray3D
+      element_size:
+        description: Array with 3 floating-point elements containing pixel size for z, y, x dimensions respectively.
+        required: true
+        range: FloatArray1D
+      element_size_units:
+        description: String specifying the units for all dimensions in element_size (e.g., um for micrometers).
+        required: true
+        range: string
+
+  Parameters:
+    description: Optional group for additional parameters when PSD has more than 2 dimensions. Used for angle-resolved or other multi-dimensional measurements.
+    attributes:
+      Name:
+        description: 1D string array containing names of parameters including units (e.g., Angle_deg). Must have length n_PSD-2.
+        required: true
+        range: StringArray1D
+      values:
+        description: 2D float array containing parameter values. First n_PSD-2 dimensions match corresponding PSD dimensions; last dimension has n_PSD-2 elements with actual parameter values.
+        required: true
+        range: FloatArray2D
+
+  AnalysisGroup:
+    is_a: Group
+    description: |
+      Group containing results from an analysis pipeline applied to the spectral data. 
+      Multiple analysis groups support multiple different analysis pipelines on the same data.
+      All arrays containing extracted parameters are 1D with length N_points and may have 
+      additional dimensions matching PSD structure.
+      
+      MULTI-PEAK FITTING - For multi-peak fits, create separate fields for each peak index.
+      Field naming pattern for each fitted peak -
+      - Shift_AS_0, Shift_AS_1, Shift_AS_2, etc. (one for each fitted peak)
+      - Width_AS_0, Width_AS_1, Width_AS_2, etc.
+      - Amplitude_AS_0, Amplitude_AS_1, etc.
+      - Offset_AS_0, Offset_AS_1, etc.
+      - Fit_error_AS_0, Fit_error_AS_1, etc. (optional error groups)
+      Same pattern applies for Stokes (_S) versions if present.
+    attributes:
+      Thumbnail:
+        description: Optional preview image for this analysis group. Can be 2D (grayscale) or 3D (RGB, with last dimension = 3).
+        required: false
+        range: FloatArray2D
+      Shift_AS:
+        description: Brillouin shift (anti-Stokes) extracted from spectral fits. Must be 1D with length N_points; can have additional dimensions matching PSD.
+        required: true
+        range: FloatArray1D
+      Shift_S:
+        description: Brillouin shift (Stokes) extracted from spectral fits. Optional complementary measurement to anti-Stokes.
+        required: false
+        range: FloatArray1D
+      Width_AS:
+        description: Peak width (anti-Stokes) extracted from spectral fits. Must be 1D with length N_points; can have additional dimensions matching PSD.
+        required: true
+        range: FloatArray1D
+      Width_S:
+        description: Peak width (Stokes) extracted from spectral fits. Optional complementary measurement to anti-Stokes.
+        required: false
+        range: FloatArray1D
+      Amplitude_AS:
+        description: Peak amplitude (anti-Stokes) extracted from spectral fits. Must be 1D with length N_points; can have additional dimensions matching PSD.
+        required: true
+        range: FloatArray1D
+      Amplitude_S:
+        description: Peak amplitude (Stokes) extracted from spectral fits. Optional complementary measurement to anti-Stokes.
+        required: false
+        range: FloatArray1D
+      Offset_AS:
+        description: Baseline offset (anti-Stokes) extracted from spectral fits. Must be 1D with length N_points; can have additional dimensions matching PSD.
+        required: true
+        range: FloatArray1D
+      Offset_S:
+        description: Baseline offset (Stokes) extracted from spectral fits. Optional complementary measurement to anti-Stokes.
+        required: false
+        range: FloatArray1D
+      Fit_error:
+        description: Optional group containing error metrics and quality indicators for the spectral fits (RMSE, R2, covariance matrix).
+        required: false
+        range: FitError
+      Fit_model:
+        description: Fitting model used for spectral analysis (e.g., Lorentzian, DHO, Voigt).
+        required: true
+        range: FitModelEnum
+      Corrections:
+        description: Text describing any corrections applied to the fitted data (e.g., for NA broadening or deconvolution).
+        required: true
+        range: string
+
+  FitError:
+    is_a: Group
+    description: |
+      Optional group containing calibration spectra and related metadata for intensity 
+      calibration. Supports multiple calibration materials. Note that internal links can 
+      be used to reference identical calibration data across multiple Data groups.
+      
+      MULTIPLE MATERIALS: For different calibration materials, create numeric field names:
+      - Calibration/0 (first material, 2D array)
+      - Calibration/1 (second material, 2D array)
+      - Calibration/2 (third material, 2D array)
+      Each must have a 'Shift' attribute with the Brillouin shift value.
+      
+      TIMESTAMPS: Similarly create Timestamp_0, Timestamp_1, Timestamp_2, etc
+    attributes:
+      RMSE:
+        description: Root mean squared error of the spectral fit for each point. Optional; when present, length must match N_points.
+        required: false
+        range: FloatArray1D
+      R2:
+        description: R-squared value indicating goodness of fit for each point. Optional; when present, length must match N_points.
+        required: false
+        range: FloatArray1D
+      Cov_matrix:
+        description: Covariance matrix of fitting parameters. Optional 3D (or more) array where last two dimensions define the matrix. First dimension(s) match N_points.
+        required: false
+        range: FloatArray3D
+
+  Calibration:
+    is_a: Group
+    description: Optional group containing calibration spectra and related metadata for intensity calibration. Supports multiple calibration materials. Note that internal links can be used to reference identical calibration data across multiple Data groups.
+    attributes:
+      Index:
+        description: Zero-based integer array (length N_points) associating each spectrum in PSD to its corresponding calibration spectrum. Values must be less than the first dimension of calibration datasets.
+        required: true
+        range: IntArray1D
+      Spectra:
+        description: 2D calibration spectrum array where first dimension corresponds to Index and second dimension contains the spectrum. Multiple calibration datasets can be created for different calibration materials; these should be named {m} (e.g., 0, 1, 2). Each must have a 'Shift' attribute specifying the Brillouin shift of that material.
+        required: true
+        range: FloatArray2D
+      Timestamp:
+        description: Optional 1D array containing milliseconds elapsed from the Datetime for each calibration spectrum. Length must match the first dimension of Spectra.
+        required: false
+        range: FloatArray1D
+      Raw_data:
+        description: Optional group containing raw data used to generate calibration spectra. Should have similar structure to /Data_{n}/Raw_data when possible.
+        required: false
+        range: RawData
+      Description:
+        description: Text describing how the calibration was performed and any relevant details about the calibration procedure.
+        required: false
+        range: string
+      Temperature:
+        description: Temperature of the calibration material (in the same units as metadata Experiment.Temperature), if relevant for the calibration.
+        required: false
+        range: float
+      Datatime:
+        description: ISO 8601 representation of the date and time when the first calibration spectrum was acquired (note - field name follows specification).
+        required: false
+        range: datetime
+      FSR:
+        description: Free spectral range of the spectrometer, if this is a parameter used for calibration.
+        required: false
+        range: float
+
+  ArrayBase:
+    description: Base class for array objects with shape, dtype, and optional data. Provides a common structure for type-constrained arrays.
+    attributes:
+      shape:
+        description: Array shape as a multivalued integer attribute. For example, a 2D array would have [rows, columns].
+        required: true
+        multivalued: true
+        range: integer
+      data:
+        description: Optional array data. In LinkML, this represents the actual array values.
+        required: false
+        multivalued: true
+        range: float
+      dtype:
+        description: Data type of the array (e.g., float32, float64, int32).
+        required: false
+        range: string
+
+  FloatArray1D:
+    is_a: ArrayBase
+    description: 1D floating-point array. Shape constraint exactly 1 dimension.
+    slot_usage:
+      shape:
+        minimum_value: 1
+        maximum_value: 1
+      data:
+        range: float
+
+  FloatArray2D:
+    is_a: ArrayBase
+    description: 2D floating-point array (matrix). Shape constraint exactly 2 dimensions.
+    slot_usage:
+      shape:
+        minimum_value: 2
+        maximum_value: 2
+      data:
+        range: float
+
+  FloatArray3D:
+    is_a: ArrayBase
+    description: 3D floating-point array (tensor). Shape constraint exactly 3 dimensions.
+    slot_usage:
+      shape:
+        minimum_value: 3
+        maximum_value: 3
+      data:
+        range: float
+
+  IntArray1D:
+    is_a: ArrayBase
+    description: 1D integer array. Shape constraint exactly 1 dimension.
+    slot_usage:
+      shape:
+        minimum_value: 1
+        maximum_value: 1
+      data:
+        range: integer
+
+  IntArray3D:
+    is_a: ArrayBase
+    description: 3D integer array (tensor). Shape constraint exactly 3 dimensions.
+    slot_usage:
+      shape:
+        minimum_value: 3
+        maximum_value: 3
+      data:
+        range: integer
+
+  StringArray1D:
+    is_a: ArrayBase
+    description: 1D string array. Shape constraint exactly 1 dimension.
+    slot_usage:
+      shape:
+        minimum_value: 1
+        maximum_value: 1
+      data:
+        range: string

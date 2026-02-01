@@ -1,0 +1,7 @@
+site_name: brim file structure
+theme:
+  name: mkdocs  # Popular theme with Material Design
+nav:
+  - Home: index.md
+plugins:
+  - search

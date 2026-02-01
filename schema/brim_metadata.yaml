@@ -1,0 +1,305 @@
+id: https://github.com/prevedel-lab/Brillouin-standard-file
+name: brim_metadata
+title: Brim File Metadata (v0.1) - LinkML Schema
+description: LinkML schema capturing Brillouin-standard-file metadata.
+license: GPL-3.0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  brim: https://github.com/prevedel-lab/Brillouin-standard-file/
+default_prefix: brim
+default_range: string
+
+imports:
+  - linkml:types
+
+enums:
+  ImmersionMediumEnum:
+    description: Immersion medium used for the objective lens
+    permissible_values:
+      other:
+        description: Other immersion medium
+      air:
+        description: No immersion (air)
+      water:
+        description: Water immersion
+      oil:
+        description: Oil immersion
+  SignalTypeEnum:
+    description: Type of Brillouin signal measured
+    permissible_values:
+      other:
+        description: Other signal type
+      spontaneous:
+        description: Spontaneous Brillouin scattering
+      stimulated:
+        description: Stimulated Brillouin scattering
+      time_resolved:
+        description: Time-resolved measurement
+  PhononsMeasuredEnum:
+    description: Types of acoustic phonons measured
+    permissible_values:
+      other:
+        description: Other phonon types
+      longitudinal_like:
+        description: Longitudinal-like acoustic phonons
+      transverse_like:
+        description: Transverse-like acoustic phonons
+      longitudinal_and_transverse_like:
+        description: Both longitudinal and transverse phonons
+  PolarizationEnum:
+    description: Polarization configuration (probe-analyze)
+    permissible_values:
+      other:
+        description: Other polarization configuration
+      V_H:
+        description: Vertical probe, horizontal analyzer
+      H_V:
+        description: Horizontal probe, vertical analyzer
+      H_H:
+        description: Horizontal probe and analyzer
+      V_V:
+        description: Vertical probe and analyzer
+      V_Unpolarized:
+        description: Vertical probe, unpolarized analyzer
+      Circular_Circular:
+        description: Circular probe and analyzer
+  ScanningStrategyEnum:
+    description: Spatial scanning strategy used for data acquisition
+    permissible_values:
+      other:
+        description: Other scanning strategy
+      point_scanning:
+        description: Single point sequential scanning
+      line_scanning:
+        description: Line-by-line scanning
+      lightsheet:
+        description: Light sheet illumination
+      time_resolved:
+        description: Time-resolved measurement
+  SpectrometerTypeEnum:
+    description: Type of Brillouin spectrometer
+    permissible_values:
+      other:
+        description: Other spectrometer type
+      VIPA:
+        description: Virtually Imaged Phased Array
+      Fabry_Perot:
+        description: Fabry-Perot etalon
+      stimulated:
+        description: Stimulated scattering spectrometer
+      heterodyne:
+        description: Heterodyne detection
+      time_domain:
+        description: Time-domain spectrometer
+      impulsive:
+        description: Impulsive stimulated Brillouin scattering
+  DetectorTypeEnum:
+    description: Type of detector used in the spectrometer
+    permissible_values:
+      other:
+        description: Other detector type
+      EM_CCD:
+        description: Electron-multiplying CCD
+      CCD:
+        description: Charge-coupled device
+      sCMOS:
+        description: Scientific CMOS camera
+      PMT:
+        description: Photomultiplier tube
+      balanced:
+        description: Balanced photodiodes
+      single_PD:
+        description: Single photodiode
+      single_APD:
+        description: Single avalanche photodiode
+  FitModelEnum:
+    permissible_values:
+      other: {}
+      Lorentzian: {}
+      DHO: {}
+      Voigt: {}
+
+classes:
+  Metadata:
+    description: Hierarchical metadata for Brillouin measurements. Contains experiment conditions, optical system parameters, Brillouin-specific settings, acquisition parameters, and spectrometer information.
+    attributes:
+      Experiment:
+        required: false
+        range: Experiment
+      Optics:
+        required: false
+        range: Optics
+      Brillouin:
+        required: false
+        range: BrillouinMeta
+      Acquisition:
+        required: false
+        range: Acquisition
+      Spectrometer:
+        required: false
+        range: Spectrometer
+
+  Experiment:
+    description: Experimental conditions and timing information.
+    attributes:
+      Datatime:
+        description: ISO 8601 representation of the time when the experiment was started (Note - field name follows specification).
+        required: false
+        range: datetime
+      Temperature:
+        description: Temperature measured as close as possible to the sample.
+        required: false
+        range: float
+      Temperature_uncertainty:
+        description: Uncertainty in the temperature measurement.
+        required: false
+        range: float
+      Sample:
+        description: Description of the sample being imaged.
+        required: false
+        range: string
+      Info:
+        description: Any additional description provided by the user to describe the experiment.
+        required: false
+        range: string
+
+  Optics:
+    description: Optical system parameters.
+    attributes:
+      Wavelength:
+        description: Wavelength of the laser used for the measurements.
+        required: true
+        range: float
+      Power:
+        description: Total optical power on the sample.
+        required: true
+        range: float
+      Resolution_x:
+        description: Spatial resolution in the X dimension.
+        required: true
+        range: float
+      Resolution_y:
+        description: Spatial resolution in the Y dimension.
+        required: true
+        range: float
+      Resolution_z:
+        description: Spatial resolution in the Z dimension (axial).
+        required: true
+        range: float
+      Lens_NA:
+        description: Numerical aperture of the lens used for imaging (detection).
+        required: true
+        range: float
+      Lens_NA_illum:
+        description: Numerical aperture of the lens used for illumination (if different from detection).
+        required: false
+        range: float
+      Immersion_medium:
+        description: Immersion medium used for the objective lens.
+        required: true
+        range: ImmersionMediumEnum
+      Objective_model:
+        description: Description of the objective lens including manufacturer and magnification.
+        required: false
+        range: string
+      Laser_model:
+        description: Model and description of the laser used.
+        required: false
+        range: string
+
+  BrillouinMeta:
+    description: Brillouin-specific measurement parameters and settings.
+    attributes:
+      Signal_type:
+        description: Type of Brillouin signal measured (spontaneous, stimulated, time-resolved, etc.).
+        required: true
+        range: SignalTypeEnum
+      Scattering_angle:
+        description: Average scattering angle between the optical axes of illumination and detection. 180 degrees corresponds to backscattering.
+        required: true
+        range: float
+      Phonons_measured:
+        description: Types of acoustic phonons measured (longitudinal, transverse, or both).
+        required: true
+        range: PhononsMeasuredEnum
+      Polarization_probed_analyzed:
+        description: Polarization configuration used for probing and analysis.
+        required: true
+        range: PolarizationEnum
+      Shift_precision:
+        description: Precision (uncertainty) of Brillouin shift measurements.
+        required: true
+        range: float
+      Width_precision:
+        description: Precision (uncertainty) of peak width measurements.
+        required: true
+        range: float
+
+  Acquisition:
+    description: Data acquisition parameters and settings.
+    attributes:
+      Scanning_strategy:
+        description: Spatial scanning strategy used for data acquisition.
+        required: true
+        range: ScanningStrategyEnum
+      Acquisition_time:
+        description: Time required to acquire a single measurement unit (depends on scanning strategy - point, line, plane, A-line, etc.).
+        required: true
+        range: float
+
+  Spectrometer:
+    description: Spectrometer and detector parameters. Note that IRF must have accompanying Frequency and Frequency_units attributes.
+    attributes:
+      IRF:
+        description: Impulse response function of the spectrometer (1D array). Must include Frequency attribute with corresponding frequency values and Frequency_units attribute with frequency units.
+        required: false
+        range: FloatArray1D
+      Type:
+        description: Type or model of spectrometer used.
+        required: true
+        range: SpectrometerTypeEnum
+      Resolution:
+        description: Spectral resolution of the spectrometer.
+        required: true
+        range: float
+      Detector_type:
+        description: Type of detector used in the spectrometer.
+        required: false
+        range: DetectorTypeEnum
+      Detector_model:
+        description: Model and detailed description of the detector.
+        required: false
+        range: string
+      Additional_filter:
+        description: Description of any additional filters present (e.g., vapor cell or Lyot stop).
+        required: false
+        range: string
+      Confocal_pinhole_diameter:
+        description: Diameter of the confocal pinhole, if present.
+        required: false
+        range: float
+
+  ArrayBase:
+    description: Base class for array objects.
+    attributes:
+      shape:
+        required: true
+        multivalued: true
+        range: integer
+      data:
+        required: false
+        multivalued: true
+        range: float
+      dtype:
+        required: false
+        range: string
+
+  FloatArray1D:
+    is_a: ArrayBase
+    description: 1D float array.
+    slot_usage:
+      shape:
+        minimum_value: 1
+        maximum_value: 1
+      data:
+        range: float
