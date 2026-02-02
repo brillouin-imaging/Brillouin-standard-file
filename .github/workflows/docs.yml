@@ -24,10 +24,10 @@ jobs:
       - run: pip install linkml
       - run: pip install mkdocs
       # ADJUST THIS: build your documentation into docs/.
-      - run: gen-doc -d docs/ schema/brim_main.yaml
+      - run: gen-doc -d schema_docs/ schema/brim_main.yaml
       # build the documentation into site/
-      - run: mkdocs build
-        working-directory: schema
+      - run: mkdocs build --config-file ../schema/mkdocs.yml
+        working-directory: schema_docs
 
       - uses: actions/upload-pages-artifact@v3
         with:

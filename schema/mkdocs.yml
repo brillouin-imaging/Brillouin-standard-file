@@ -1,6 +1,7 @@
 site_name: brim file structure
+docs_dir: ../schema_docs
 theme:
-  name: mkdocs  # Popular theme with Material Design
+  name: mkdocs
 nav:
   - Home: index.md
 plugins:
