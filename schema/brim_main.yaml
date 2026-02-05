@@ -16,57 +16,10 @@ default_range: string
 imports:
   - linkml:types
   - brim_metadata
+  - zarr
 
 classes:
-# classes to define the elements in a zarr file
-  Group:
-    abstract: true
-    description: A group in a zarr file
-    attributes:
-      name:
-        identifier: true
-        required: true
-        range: string
-  Array:
-    abstract: true
-    description: An array in a zarr file
-    attributes:
-      name:
-        identifier: true
-        required: true
-        range: string
-      shape:
-        required: true
-        multivalued: true
-      data_type:
-        range: string
-  # classes defining the .brim file
-  BrimFile:
-    tree_root: true
-    is_a: Group
-    description: |
-      Root group of a BRIM file. Contains global file metadata and the main Brillouin data group.
-      
-      ## General description:
-      The brim file format (brillouin imaging) is designed to store Brillouin spectral data along with the results of its analysis.
-      While it supports the storage of individual spectra acquired under different conditions, its primary focus is on Brillouin microscopy images.
-      Brillouin microscopy is a hyperspectral imaging technique, where each pixel in the final 3D image corresponds to a full spectrum. 
-      Individual spectra are arranged in a flattened structure within the '/data_{n}/PSD' array.
-      In this format, the first dimension represents the spatial position, while the second dimension contains the spectral information.
-      The mapping of these spectra to a 3D image is done through the '/data_{n}/Scanning/Cartesian_visualization' array.
-      Additionally, the '/data_{n}' groups enable the storage of multiple acquisitions, referred to as time points.
-      These time points are not limited to conventional time-lapse imaging but can also represent variations in experimental conditions, such as temperature, osmolarity, or other environmental factors.
-
-      ## General features:
-      - The terminology used in this document is the one of [Zarr](https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html#concepts-and-terminology), even though these specifications only define the structure of the file and are thus not restricted to Zarr
-      - The specification defines the minimum set of groups/arrays/attributes that must be implemented. More can be added while still complying with the specs
-      - The exact name of the fields defined by the specification must be used (case sensitive)
-      - Avoid using symbols that are special characters in popular languages (e.g. '(', '=', '+', etc.) in names of arrays/attributes
-      - Compression and filters to individual arrays can be used
-      - If supported by the underlaying storage, links to internal groups/arrays can be used instead of duplicating the data, if needed
-      - Datetimes must be represented as a string in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format
-      - For arrays that require units an attribute named 'units' that contains the name of the units as a string must be attached to the array; if an attribute (e.g. named 'attribute_x') needs units, one must add another attribute called 'attribute_x_units' at the same hierarchical level and store the name of the unit as a string
-      - Enums should be stored as string (but preferably the library used to generate the brim file should still expose enums to the user, to avoids typos in the name of the elements)
+  root_attributes:
     attributes:
       brim_version:
         description: Version of the BRIM specification that the current file complies with (e.g., 0.1). Must follow [semantic versioning](https://semver.org/) conventions.
@@ -105,6 +58,35 @@ classes:
           slot_conditions:
             Subtype_features:
               recommended: true
+  BrimFile:
+    tree_root: true
+    is_a: Group
+    description: |
+      Root group of a BRIM file. Contains global file metadata and the main Brillouin data group.
+      
+      ## General description:
+      The brim file format (brillouin imaging) is designed to store Brillouin spectral data along with the results of its analysis.
+      While it supports the storage of individual spectra acquired under different conditions, its primary focus is on Brillouin microscopy images.
+      Brillouin microscopy is a hyperspectral imaging technique, where each pixel in the final 3D image corresponds to a full spectrum. 
+      Individual spectra are arranged in a flattened structure within the '/data_{n}/PSD' array.
+      In this format, the first dimension represents the spatial position, while the second dimension contains the spectral information.
+      The mapping of these spectra to a 3D image is done through the '/data_{n}/Scanning/Cartesian_visualization' array.
+      Additionally, the '/data_{n}' groups enable the storage of multiple acquisitions, referred to as time points.
+      These time points are not limited to conventional time-lapse imaging but can also represent variations in experimental conditions, such as temperature, osmolarity, or other environmental factors.
+
+      ## General features:
+      - The terminology used in this document is the one of [Zarr](https://zarr-specs.readthedocs.io/en/latest/v3/core/index.html#concepts-and-terminology), even though these specifications only define the structure of the file and are thus not restricted to Zarr
+      - The specification defines the minimum set of groups/arrays/attributes that must be implemented. More can be added while still complying with the specs
+      - The exact name of the fields defined by the specification must be used (case sensitive)
+      - Avoid using symbols that are special characters in popular languages (e.g. '(', '=', '+', etc.) in names of arrays/attributes
+      - Compression and filters to individual arrays can be used
+      - If supported by the underlaying storage, links to internal groups/arrays can be used instead of duplicating the data, if needed
+      - Datetimes must be represented as a string in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format
+      - For arrays that require units an attribute named 'units' that contains the name of the units as a string must be attached to the array; if an attribute (e.g. named 'attribute_x') needs units, one must add another attribute called 'attribute_x_units' at the same hierarchical level and store the name of the unit as a string
+      - Enums should be stored as string (but preferably the library used to generate the brim file should still expose enums to the user, to avoids typos in the name of the elements)
+    slot_usage:
+      attributes:
+        range: root_attributes
 
   BrillouinData:
     is_a: Group
@@ -304,7 +286,6 @@ classes:
         range: FloatArray1D
 
       Analyses:
-        is_a: Group
         description: |
           Array of analysis result groups (Analysis_0, Analysis_1, etc.), each containing 
           results from an analysis pipeline applied to the spectral data. In actual files,
@@ -315,7 +296,6 @@ classes:
         range: AnalysisGroup
 
       Calibration:
-        is_a: Group
         description: Optional group containing calibration spectra and metadata for intensity calibration.
         required: false
         range: Calibration

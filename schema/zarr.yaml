@@ -1,0 +1,47 @@
+name: zarr_main
+id: https://github.com/prevedel-lab/Brillouin-standard-file
+enums:
+  NodeType:
+    description: Possible values for zarr nodes
+    permissible_values:
+      group:
+      array:
+
+classes:
+  Node:
+    description: Defines fields that must be present in any zarr node (group or array)
+    attributes:
+      name:
+        identifier: true
+        required: true
+        range: string
+      attributes:
+        required: true
+        range: Any
+      node_type: 
+        required: true
+        range: NodeType   
+  Group:
+    abstract: true
+    description: A group in a zarr file
+    attributes:
+      node_attributes:
+        required: true
+        multivalued: false
+        inlined: true
+        range: Node      
+  Array:
+    abstract: true
+    description: An array in a zarr file
+    attributes:
+      node_attributes:
+        required: true
+        multivalued: false
+        inlined: true
+        range: Node   
+      shape:
+        required: true
+        multivalued: true
+        range: integer
+      data_type:
+        range: string
