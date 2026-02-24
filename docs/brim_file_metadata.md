@@ -22,7 +22,7 @@ The `Metadata` attribute in the `/Brillouin\_data` has the following hierarchy (
 
 ## Detailed description of the metadata in the file:
 - **‘/Experiment’** has the following nested attributes:
-  - **‘Datatime’ [string]** (optional): a [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html): time when the experiment was started 
+  - **‘Datetime’ [string]** (optional): a [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html): time when the experiment was started 
   - **‘Temperature’ [float]** (optional): the temperature measured as close as possible to the sample
   - **‘Temperature\_uncertainty’ [float]** (optional)
   - **‘Sample’ [string]** (optional): description of the sample being imaged
@@ -56,5 +56,5 @@ The `Metadata` attribute in the `/Brillouin\_data` has the following hierarchy (
     - **‘Resolution’ [float]**    
     - **‘Detector\_type’ [enum{other, EM-CCD, CCD, sCMOS, PMT, balanced, single_PD, single_APD}]** (optional)
     - **‘Detector\_model’ [string]** (optional)
-    - **‘Additional filter’ [string]** (optional): description of any additional filter present in the spectrometer (e.g. vapor cell, Lyot stop, etc..)
+    - **‘Additional_filter’ [string]** (optional): description of any additional filter present in the spectrometer (e.g. vapor cell, Lyot stop, etc..)
     - **‘Confocal\_pinhole\_diameter’ [float]** (optional)
