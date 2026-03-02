@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" >
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Brim file validator</title>
+        <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/prevedel-lab/brimfile@main/brimfile_logo.png"/>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    
+        <style>
+            :root {
+                --biobrillouin-blue: rgb(64, 153, 218);
+                }
+            #fileSelect {
+                background-color: var(--biobrillouin-blue);
+                border-color: var(--biobrillouin-blue);
+                }
+            #fileSelect:hover {
+                opacity: 0.9;
+                }
+            #dropzone {
+                border: 3px dashed var(--biobrillouin-blue);
+                border-radius: 8px;
+                padding: 60px 20px;
+                text-align: center;
+                background-color: rgba(64, 153, 218, 0.05);
+                transition: all 0.3s ease;
+                cursor: pointer;
+            }
+            #dropzone:hover {
+                background-color: rgba(64, 153, 218, 0.1);
+                border-color: rgb(40, 130, 200);
+            }
+            #dropzone.dragover {
+                background-color: rgba(64, 153, 218, 0.15);
+                border-color: rgb(20, 100, 180);
+                box-shadow: 0 0 10px rgba(64, 153, 218, 0.3);
+            }
+            #dropzone i {
+                font-size: 48px;
+                color: var(--biobrillouin-blue);
+                margin-bottom: 15px;
+                display: block;
+            }
+            #dropzone .drop-text {
+                font-size: 18px;
+                color: var(--biobrillouin-blue);
+                font-weight: 500;
+                margin-bottom: 8px;
+            }
+            #dropzone .drop-subtext {
+                font-size: 14px;
+                color: #666;
+            }
+        </style>
+    </head>
+    <body>
+        <header class="d-flex py-3 mb-4 border-bottom" style="background-color: var(--biobrillouin-blue); justify-content: flex-start; align-items: center; column-gap: 15px;">
+            <div style="height: 60px; width: auto; display: flex; padding-left: 10px;">
+                <img src="https://cdn.jsdelivr.net/gh/prevedel-lab/brimfile@main/brimfile_logo.png" width="364" height="237" style="vertical-align: middle; height: auto; width: auto;">
+            </div>
+            <div style="padding-right: 10px; padding-left: 10px; flex: 1; text-align: center;">
+                <span style="color:white; font-weight: 400; font-size: 28px; font-family:aktiv-grotesk, 'Segoe UI', Arial, Helvetica, sans-serif;">Brim file validator</span>
+            </div>
+            <div style="margin-left: auto; display: flex; margin-left:auto; padding-right:15px;">
+                <a href="https://github.com/prevedel-lab/Brillouin-standard-file" target="_blank" style="text-decoration: none;">                    
+                    <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" width="32" height="32">                    
+                </a>
+            </div>
+        </header>
+        <div class="container my-5" id="main-content">
+            <input type="file" id="fileElem" accept=".brim.zip" style="display: none"/>
+            <div id="dropzone">
+                <i class="bi bi-cloud-arrow-up"></i>
+                <div class="drop-text">Drop your .brim.zip file here</div>
+                <div class="drop-subtext">or click to browse</div>
+                <button id="fileSelect" type="button" class="btn btn-primary mt-3" onclick="document.getElementById('fileElem').click()">
+                    Select File
+                </button>
+            </div>
+        </div>
+       <script type="module">
+            import { ZarrFile, init_file } from "https://cdn.jsdelivr.net/gh/prevedel-lab/brimfile@main/src/js/zarr_file.js"
+
+            async function handleFileLoad(file) {
+                console.log('File selected:', file.name);
+                // Add your file processing logic here
+                try {
+                    const { zarr_file_js: zarr_file, filename } = await init_file(file);
+                    console.log('Zarr file loaded:', zarr_file);
+                    console.log('Filename:', filename);
+                    
+                    const json = await zarr_file.generateJsonDescriptor();
+                    console.log('Generated JSON descriptor:', json);
+                } catch (error) {
+                    console.error('Error loading file:', error);
+                }
+            }
+            
+            // Add event listener when DOM is ready
+            document.getElementById('fileElem').addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    handleFileLoad(file);
+                }
+            });
+
+            // enable drag and drop
+            const dropzone = document.getElementById("dropzone");
+            
+            function dragenter(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                dropzone.classList.add("dragover");
+                }
+            function dragover(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                dropzone.classList.add("dragover");
+                }
+            function dragleave(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                dropzone.classList.remove("dragover");
+                }
+            function drop(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                dropzone.classList.remove("dragover");
+
+                const dt = e.dataTransfer;
+                const files = dt.files;
+
+                handleFileLoad(files[0]);
+                }
+            dropzone.addEventListener("dragenter", dragenter);
+            dropzone.addEventListener("dragover", dragover);
+            dropzone.addEventListener("dragleave", dragleave);
+            dropzone.addEventListener("drop", drop);
+       </script>
+    </body>
+</html>
