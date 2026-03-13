@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en" >
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Brim file validator</title>
+        <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/prevedel-lab/brimfile@main/brimfile_logo.png"/>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+        
+        <!-- Import Pyodide script-->
+        <script src="https://cdn.jsdelivr.net/pyodide/v0.29.3/full/pyodide.js"></script>
+
+        <style>
+            :root {
+                --biobrillouin-blue: rgb(64, 153, 218);
+                }
+            #fileSelect,
+            #folderSelect {
+                background-color: var(--biobrillouin-blue);
+                border-color: var(--biobrillouin-blue);
+                }
+            #fileSelect:hover,
+            #folderSelect:hover {
+                opacity: 0.9;
+                }
+            #dropzone {
+                border: 3px dashed var(--biobrillouin-blue);
+                border-radius: 8px;
+                padding: 60px 20px;
+                text-align: center;
+                background-color: rgba(64, 153, 218, 0.05);
+                transition: all 0.3s ease;
+                cursor: pointer;
+            }
+            #dropzone:hover {
+                background-color: rgba(64, 153, 218, 0.1);
+                border-color: rgb(40, 130, 200);
+            }
+            #dropzone.dragover {
+                background-color: rgba(64, 153, 218, 0.15);
+                border-color: rgb(20, 100, 180);
+                box-shadow: 0 0 10px rgba(64, 153, 218, 0.3);
+            }
+            #dropzone i {
+                font-size: 48px;
+                color: var(--biobrillouin-blue);
+                margin-bottom: 15px;
+                display: block;
+            }
+            #dropzone .drop-text {
+                font-size: 18px;
+                color: var(--biobrillouin-blue);
+                font-weight: 500;
+                margin-bottom: 8px;
+            }
+            #dropzone .drop-subtext {
+                font-size: 14px;
+                color: #666;
+            }
+            body.loading {
+                overflow: hidden;
+            }
+            #loading-overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 9999;
+                background: white;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 12px;
+            }
+            #loading-overlay .spinner-border {
+                color: var(--biobrillouin-blue);
+                width: 3rem;
+                height: 3rem;
+            }
+            body:not(.loading) #loading-overlay {
+                display: none;
+            }
+        </style>
+    </head>
+    <body class="loading">
+        <div id="loading-overlay" role="status" aria-live="polite" aria-label="Loading validator">
+            <div class="spinner-border" aria-hidden="true"></div>
+            <div>Loading validator...</div>
+        </div>
+        <header class="d-flex py-3 mb-4 border-bottom" style="background-color: var(--biobrillouin-blue); justify-content: flex-start; align-items: center; column-gap: 15px;">
+            <div style="height: 60px; width: auto; display: flex; padding-left: 10px;">
+                <img src="https://cdn.jsdelivr.net/gh/prevedel-lab/brimfile@main/brimfile_logo.png" width="364" height="237" style="vertical-align: middle; height: auto; width: auto;" alt="Brim file logo">
+            </div>
+            <div style="padding-right: 10px; padding-left: 10px; flex: 1; text-align: center;">
+                <span style="color:white; font-weight: 400; font-size: 28px; font-family:aktiv-grotesk, 'Segoe UI', Arial, Helvetica, sans-serif;">Brim file validator</span>
+            </div>
+            <div style="margin-left: auto; display: flex; margin-left:auto; padding-right:15px;">
+                <a href="https://github.com/prevedel-lab/Brillouin-standard-file" target="_blank" style="text-decoration: none;">                    
+                    <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" width="32" height="32" alt="Brillouin standard file GitHub repository">                    
+                </a>
+            </div>
+        </header>
+        <div class="container my-5" id="main-content">
+            <div id="validation-results" class="mt-4"></div>
+            <input type="file" id="fileElem" accept=".brim.zip" style="display: none"/>
+            <input type="file" id="folderElem" webkitdirectory directory multiple style="display: none"/>
+            <div id="dropzone">
+                <i class="bi bi-cloud-arrow-up"></i>
+                <div class="drop-text">Drop a .brim.zip file or .brim.zarr folder here</div>
+                <div class="drop-subtext">or choose an option below</div>
+                <div class="d-flex justify-content-center gap-2 mt-3 flex-wrap">
+                    <button id="fileSelect" type="button" class="btn btn-primary" onclick="document.getElementById('fileElem').click()">
+                        Select .brim.zip File
+                    </button>
+                    <button id="folderSelect" type="button" class="btn btn-primary" onclick="document.getElementById('folderElem').click()">
+                        Select .brim.zarr Folder
+                    </button>
+                </div>
+            </div>
+        </div>
+       <script type="module">
+            import { ZarrFile, init_file } from "./zarr_file.js"
+
+            function escapeHtml(value) {
+                return String(value)
+                    .replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;")
+                    .replaceAll('"', "&quot;")
+                    .replaceAll("'", "&#039;");
+            }
+
+            function renderFilenameBlock(filename = "") {
+                if (!filename) {
+                    return "";
+                }
+
+                return `
+                    <div class="mb-2">
+                        <span class="fw-semibold">Filename:</span>
+                        <span class="text-break">${escapeHtml(filename)}</span>
+                    </div>
+                `;
+            }
+
+            function extractDisplayFilename(files) {
+                if (!files || typeof files.length !== "number" || files.length === 0) {
+                    return "";
+                }
+
+                const firstFile = files[0];
+                if (!firstFile) {
+                    return "";
+                }
+
+                if (files.length === 1 && firstFile.name) {
+                    return firstFile.name;
+                }
+
+                if (firstFile.webkitRelativePath) {
+                    const rootName = firstFile.webkitRelativePath.split("/")[0];
+                    if (rootName) {
+                        return rootName;
+                    }
+                }
+
+                return firstFile.name ?? "";
+            }
+
+            function toFileArray(filesLike) {
+                if (!filesLike || typeof filesLike.length !== "number") {
+                    return [];
+                }
+                return Array.from(filesLike);
+            }
+
+            function withRelativePath(file, relativePath) {
+                return {
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    lastModified: file.lastModified,
+                    webkitRelativePath: relativePath,
+                    arrayBuffer: () => file.arrayBuffer(),
+                };
+            }
+
+            function readDirectoryEntries(reader) {
+                return new Promise((resolve, reject) => {
+                    const allEntries = [];
+
+                    const readBatch = () => {
+                        reader.readEntries((entries) => {
+                            if (!entries.length) {
+                                resolve(allEntries);
+                                return;
+                            }
+                            allEntries.push(...entries);
+                            readBatch();
+                        }, reject);
+                    };
+
+                    readBatch();
+                });
+            }
+
+            function getEntryFile(entry) {
+                return new Promise((resolve, reject) => {
+                    entry.file(resolve, reject);
+                });
+            }
+
+            async function collectFilesFromEntry(entry, parentPath = "") {
+                const currentPath = parentPath ? `${parentPath}${entry.name}` : entry.name;
+
+                if (entry.isFile) {
+                    const file = await getEntryFile(entry);
+                    return [withRelativePath(file, currentPath)];
+                }
+
+                if (entry.isDirectory) {
+                    const reader = entry.createReader();
+                    const entries = await readDirectoryEntries(reader);
+                    const files = [];
+
+                    for (const childEntry of entries) {
+                        const childFiles = await collectFilesFromEntry(childEntry, `${currentPath}/`);
+                        files.push(...childFiles);
+                    }
+
+                    return files;
+                }
+
+                return [];
+            }
+
+            async function collectDroppedFiles(dataTransfer) {
+                const items = dataTransfer?.items ? Array.from(dataTransfer.items) : [];
+                const entries = items
+                    .filter((item) => item.kind === "file" && typeof item.webkitGetAsEntry === "function")
+                    .map((item) => item.webkitGetAsEntry())
+                    .filter((entry) => entry);
+
+                if (entries.length > 0 && entries.some((entry) => entry.isDirectory)) {
+                    const files = [];
+                    for (const entry of entries) {
+                        const entryFiles = await collectFilesFromEntry(entry);
+                        files.push(...entryFiles);
+                    }
+                    return files;
+                }
+
+                return toFileArray(dataTransfer?.files);
+            }
+
+            function renderValidationTable(validationResult, filename = "") {
+                const container = document.getElementById("validation-results");
+                if (!container) {
+                    return;
+                }
+
+                const filenameBlock = renderFilenameBlock(filename);
+
+                if (!Array.isArray(validationResult) || validationResult.length === 0) {
+                    container.innerHTML = `${filenameBlock}<div class="alert alert-success mb-4" role="alert">No validation issues found.</div>`;
+                    return;
+                }
+
+                const rowClassByLevel = {
+                    WARNING: "table-success",
+                    ERROR: "table-warning",
+                    CRITICAL: "table-danger",
+                };
+
+                const rows = validationResult.map((item) => {
+                    const rowClass = rowClassByLevel[item.level] || "";
+                    return `
+                        <tr class="${rowClass}">
+                            <td>${escapeHtml(item.type ?? "")}</td>
+                            <td class="text-break">${escapeHtml(item.path ?? "")}</td>
+                            <td>${escapeHtml(item.message ?? "")}</td>
+                        </tr>
+                    `;
+                }).join("");
+
+                container.innerHTML = `
+                    ${filenameBlock}
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered align-middle mb-0">
+                            <colgroup>
+                                <col style="width: 18%;">
+                                <col style="width: 24%;">
+                                <col style="width: 58%;">
+                            </colgroup>
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Path</th>
+                                    <th scope="col">Message</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            function renderValidationSpinner(filename = "") {
+                const container = document.getElementById("validation-results");
+                if (!container) {
+                    return;
+                }
+
+                const filenameBlock = renderFilenameBlock(filename);
+
+                container.innerHTML = `
+                    ${filenameBlock}
+                    <div class="d-flex align-items-center gap-3 mb-4" role="status" aria-live="polite">
+                        <div class="spinner-border text-primary" aria-hidden="true"></div>
+                        <div>Validation running...</div>
+                    </div>
+                `;
+            }
+
+            function renderValidationError(error, filename = "") {
+                const container = document.getElementById("validation-results");
+                if (!container) {
+                    return;
+                }
+
+                const message = error instanceof Error ? error.message : String(error ?? "Unknown error");
+                const filenameBlock = renderFilenameBlock(filename);
+                container.innerHTML = `
+                    ${filenameBlock}
+                    <div class="alert alert-danger mb-4" role="alert">
+                        Validation failed: ${escapeHtml(message)}
+                    </div>
+                `;
+            }
+
+            async function handleFilesLoad(files) {
+                console.log('Files selected:', files);
+                let resolvedFilename = extractDisplayFilename(files);
+                renderValidationSpinner(resolvedFilename);
+                try {
+                    const { zarr_file_js: zarr_file, filename } = await init_file(files);
+                    if (filename) {
+                        resolvedFilename = filename;
+                    }
+                    console.log('Zarr file loaded:', zarr_file);
+                    console.log('Filename:', resolvedFilename);
+                    
+                    const json = await zarr_file.generateJsonDescriptor();
+                    console.log('Generated JSON descriptor:', json);
+                    
+                    const validation_result = await validate_brim(json);
+                    console.log('Validation result:', validation_result);
+                    renderValidationTable(validation_result, resolvedFilename);
+                } catch (error) {
+                    console.error('Error loading file:', error);
+                    renderValidationError(error, resolvedFilename);
+                }
+            }
+            
+            // Add event listener when DOM is ready
+            document.getElementById('fileElem').addEventListener('change', (event) => {
+                const files = event.target.files;
+                if (files.length == 1) {
+                    handleFilesLoad(files);
+                }
+                // reset the input so that selecting the same file again will trigger the change event
+                event.target.value = ""; 
+            });
+            document.getElementById('folderElem').addEventListener('change', (event) => {
+                const files = event.target.files;
+                if (files.length > 1) {
+                    handleFilesLoad(files);
+                }
+                // reset the input so that selecting the same file again will trigger the change event
+                event.target.value = ""; 
+            });
+
+            // enable drag and drop
+            const dropzone = document.getElementById("dropzone");
+            
+            function dragenter(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                dropzone.classList.add("dragover");
+                }
+            function dragover(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                dropzone.classList.add("dragover");
+                }
+            function dragleave(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                dropzone.classList.remove("dragover");
+                }
+            async function drop(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                dropzone.classList.remove("dragover");
+
+                const dt = e.dataTransfer;
+                const files = await collectDroppedFiles(dt);
+                if (files.length > 0) {
+                    handleFilesLoad(files);
+                }
+                }
+            dropzone.addEventListener("dragenter", dragenter);
+            dropzone.addEventListener("dragover", dragover);
+            dropzone.addEventListener("dragleave", dragleave);
+            dropzone.addEventListener("drop", drop);
+            
+            markModuleScriptReady();            
+       </script>
+       <script type="text/javascript">
+            const scriptReadiness = {
+                module: false,
+                pyodide: false,
+            };
+
+            function hideLoadingOverlayWhenReady() {
+                if (scriptReadiness.module && scriptReadiness.pyodide) {
+                    document.body.classList.remove("loading");
+                }
+            }
+
+            window.markModuleScriptReady = function() {
+                scriptReadiness.module = true;
+                hideLoadingOverlayWhenReady();
+            }
+
+            function toAbsoluteUrl (relativePath, baseUrl = self.location.href) { 
+                return new URL(relativePath, baseUrl).href;
+            }
+            async function setupPyodide(){
+                window.pyodide = await loadPyodide();
+                await pyodide.loadPackage("micropip"); 
+                const micropip = pyodide.pyimport("micropip");
+                micropip.add_mock_package("numpy", "2.4.3");
+                micropip.add_mock_package("zarr", "3.1.2");               
+                await micropip.install.callKwargs(toAbsoluteUrl('./brimfile-1.4.2-py3-none-any.whl'), { deps: false });
+
+                await pyodide.runPythonAsync(`
+                    import os
+                    # set environment variable to only import validation code
+                    os.environ["BRIMFILE_IMPORT_VALIDATION_ONLY"] = "1" 
+
+                    from brimfile.validation.main import validate_json
+
+                    from pyodide.ffi import to_js
+                    from dataclasses import asdict
+                    from enum import Enum
+                `);
+            }
+            async function validate_brim(json_descriptor){
+                const locals = pyodide.toPy({json_descriptor: json_descriptor})
+                const validation_result = pyodide.runPython(`
+                    res = validate_json(json_descriptor)
+                    # convert dataclass objects to dicts for easier handling in JS
+                    js_res = []
+                    for item in res:
+                        dic = asdict(item)
+                        for key, value in dic.items():
+                        # convert enum values to their names for easier handling in JS
+                            if isinstance(value, Enum):
+                                dic[key] = value.name
+                        js_res.append(dic)
+                    to_js(js_res)
+                `, {locals: locals});
+                return validation_result;
+            }
+            setupPyodide()
+                .catch((error) => {
+                    console.error("Error setting up Pyodide:", error);
+                })
+                .finally(() => {
+                    scriptReadiness.pyodide = true;
+                    hideLoadingOverlayWhenReady();
+                });
+    </script>
+    </body>
+</html>

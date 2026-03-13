@@ -1,0 +1,47 @@
+name: Generate metadata documentation from schema
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_message:
+        description: Commit message for metadata docs update
+        required: false
+        default: "Regenerate metadata docs from schema"
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  check-metadata-doc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Generate metadata markdown
+        run: python .github/scripts/generate_metadata_markdown.py
+
+      - name: Commit and push metadata markdown if changed
+        env:
+          COMMIT_MSG: ${{ github.event.inputs.commit_message }}
+          CI_COMMIT_AUTHOR: github-actions[bot]
+          CI_COMMIT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+        run: |
+          if git diff --quiet -- docs/brim_file_metadata.md; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          COMMIT_MSG="${COMMIT_MSG:-Regenerate metadata docs from schema}"
+
+          git config user.name "${{ env.CI_COMMIT_AUTHOR }}"
+          git config user.email "${{ env.CI_COMMIT_EMAIL }}"
+          git add docs/brim_file_metadata.md
+          git commit -m "$COMMIT_MSG"
+          git push origin HEAD:${{ github.ref_name }}
