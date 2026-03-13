@@ -125,7 +125,7 @@ def render_markdown(schema_module: Any, schema_source: str) -> str:
         "",
         "The following metadata are defined with the aim of making Brillouin measurements interpretable and reproducible; they are based on the [Consensus Statement on Brillouin Light Scattering Microscopy of Biological Materials](https://doi.org/10.1038/s41566-025-01681-6).",
         "",
-        "The units used the same conventions defined in the [main document](brim_file_specs.md).",
+        "The units use the same conventions defined in the [main document](brim_file_specs.md).",
         "",
         "## Structure",
         "",
@@ -157,7 +157,7 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_SCHEMA_URL,
         help=(
             "URL of metadata schema module "
-            "(default: prevedel-lab/brimfile brim-validation branch)"
+            "(default: prevedel-lab/brimfile main branch)"
         ),
     )
     parser.add_argument(
