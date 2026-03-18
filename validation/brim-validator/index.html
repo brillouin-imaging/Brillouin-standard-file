@@ -119,7 +119,7 @@
             </div>
         </div>
        <script type="module">
-            import { ZarrFile, init_file } from "./zarr_file.js"
+            import { ZarrFile, init_file } from "https://cdn.jsdelivr.net/gh/prevedel-lab/brimfile@main/src/js/zarr_file.js";
 
             function escapeHtml(value) {
                 return String(value)
@@ -435,16 +435,13 @@
                 hideLoadingOverlayWhenReady();
             }
 
-            function toAbsoluteUrl (relativePath, baseUrl = self.location.href) { 
-                return new URL(relativePath, baseUrl).href;
-            }
             async function setupPyodide(){
                 window.pyodide = await loadPyodide();
                 await pyodide.loadPackage("micropip"); 
                 const micropip = pyodide.pyimport("micropip");
                 micropip.add_mock_package("numpy", "2.4.3");
                 micropip.add_mock_package("zarr", "3.1.2");               
-                await micropip.install.callKwargs(toAbsoluteUrl('./brimfile-1.4.2-py3-none-any.whl'), { deps: false });
+                await micropip.install.callKwargs('brimfile>=1.5.0,<2.0.0', { deps: false });
 
                 await pyodide.runPythonAsync(`
                     import os
