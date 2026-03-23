@@ -38,6 +38,8 @@ We developed a web app ([BrimView](https://biobrillouin.org/brimview/)) to visua
 You can use the [brimfile package](https://pypi.org/project/brimfile/), which provides an easy interface to the latest version of the brim file in Python.
 If you encounter any issue with using the library or want to request additional features, you can create a GitHub issue on the page of [the project](https://github.com/prevedel-lab/brimfile/issues).
 
+We also developed a [Napari plugin](https://napari-hub.org/plugins/brillouin-imaging.html) and a [FIJI plugin](https://github.com/prevedel-lab/brillouin-imaging-fiji), which can be used to open existing brim files.
+
 ## What is the content of this repository
 The file ['docs/brim_file_specs'](docs/brim_file_specs.md) describes the latest specifications for the brim file format.
 
