@@ -3,7 +3,7 @@ The aim of this repository is to define and discuss a standard file format for B
 
 ## What is Brillouin microscopy?
 Brillouin microscopy is essentially a hyperspectral imaging technique which extends Brillouin spectroscopy to microscopy.
-In the recent years it has found increasing applications in biomedical imaging for its potential of assessing the mechanical
+In recent years it has found increasing applications in biomedical imaging for its potential of assessing the mechanical
 properties of various biological samples (for more information you can find many reviews about the topic,
 e.g. [Kabakova et al 2024](https://doi.org/10.1038/s43586-023-00286-z) and [Prevedel et al. 2019](https://doi.org/10.1038/s41592-019-0543-3)).
 Different approaches can be used to acquire the Brillouin signal (e.g. spontaneous, stimulated, time-domain) but ultimately
@@ -11,7 +11,7 @@ they all collect a spectrum for each voxel in the image. Typically, few paramete
 (e.g. Brillouin shift and width) and displayed as color maps.
 
 ## Motivation for a standard file format
-As more and more data are been produced from different instruments and various labs and commercial Brillouin microscopes
+As more and more data are produced from different instruments and various labs and commercial Brillouin microscopes
 are entering the market, we advocate for the establishment of a common file format to store the raw as well as processed
 Brillouin spectral data, together with metadata that is important to understand the context of any given experiment.
 
@@ -41,7 +41,7 @@ If you encounter any issue with using the library or want to request additional 
 ## What is the content of this repository
 The file ['docs/brim_file_specs'](docs/brim_file_specs.md) describes the latest specifications for the brim file format.
 
-The forlder ['examples'](examples/) contains example files for a specific version of .brim.
+The folder ['examples'](examples/) contains example files for a specific version of .brim.
 
 ## Input from the community is encouraged!
 People from the community are encouraged to provide suggestions on how to extend/modify the specifications to make the
