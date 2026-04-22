@@ -29,16 +29,16 @@ Furthermore, it is already used in many industries and scientific fields and als
 
 One drawback of the HDF5 file is that it was not natively designed for cloud and parallel I/O, both features that Brillouin spectral data can benefit from.
 The [Zarr](https://zarr.dev/) file format is [inspired by the same principles of HDF5](https://medium.com/open-source-science-initiative/why-i-zarr-ee64eb7ffbf8) but overcomes the mentioned limitations. 
-Therefore, also based on the discussion in [issue #1](https://github.com/prevedel-lab/Brillouin-standard-file/issues/1),
+Therefore, also based on the discussion in [issue #1](https://github.com/brillouin-imaging/Brillouin-standard-file/issues/1),
 we advocate for the use of Zarr as a container for the brim file and we plan to only fully support Zarr.
 
 ## How to read/write to brim files
-We developed a web app ([BrimView](https://biobrillouin.org/brimview/)) to visualize and process brim files. If you encounter any problem with it, you can open a [GitHub issue](https://github.com/prevedel-lab/BrimView/issues). 
+We developed a web app ([BrimView](https://biobrillouin.org/brimview/)) to visualize and process brim files. If you encounter any problem with it, you can open a [GitHub issue](https://github.com/brillouin-imaging/BrimView/issues). 
 
 You can use the [brimfile package](https://pypi.org/project/brimfile/), which provides an easy interface to the latest version of the brim file in Python.
-If you encounter any issue with using the library or want to request additional features, you can create a GitHub issue on the page of [the project](https://github.com/prevedel-lab/brimfile/issues).
+If you encounter any issue with using the library or want to request additional features, you can create a GitHub issue on the page of [the project](https://github.com/brillouin-imaging/brimfile/issues).
 
-We also developed a [Napari plugin](https://napari-hub.org/plugins/brillouin-imaging.html) and a [FIJI plugin](https://github.com/prevedel-lab/brillouin-imaging-fiji), which can be used to open existing brim files.
+We also developed a [Napari plugin](https://napari-hub.org/plugins/brillouin-imaging.html) and a [FIJI plugin](https://github.com/brillouin-imaging/brillouin-imaging-fiji), which can be used to open existing brim files.
 
 ## What is the content of this repository
 The file ['docs/brim_file_specs'](docs/brim_file_specs.md) describes the latest specifications for the brim file format.
@@ -53,4 +53,4 @@ information and also, importantly, have a well-defined and common structure so t
 information as possible in an automated fashion.
 
 To provide input or discuss specific issues you can create [GitHub
-issue](https://github.com/prevedel-lab/Brillouin-standard-file/issues).
+issue](https://github.com/brillouin-imaging/Brillouin-standard-file/issues).

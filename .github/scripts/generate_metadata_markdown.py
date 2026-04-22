@@ -14,7 +14,7 @@ from urllib.request import urlopen
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SCHEMA_URL = (
-    "https://github.com/prevedel-lab/brimfile/blob/main/"
+    "https://github.com/brillouin-imaging/brimfile/blob/main/"
     "src/brimfile/metadata/schema.py"
 )
 DEFAULT_OUTPUT = REPO_ROOT / "docs" / "brim_file_metadata.md"
@@ -157,7 +157,7 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_SCHEMA_URL,
         help=(
             "URL of metadata schema module "
-            "(default: prevedel-lab/brimfile main branch)"
+            "(default: brillouin-imaging/brimfile main branch)"
         ),
     )
     parser.add_argument(
