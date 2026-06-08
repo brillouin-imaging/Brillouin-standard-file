@@ -138,13 +138,17 @@ All the following groups are inside the ‘/Brillouin\_data’ group:
   - **‘Fit\_model’ [enum:{other, Lorentzian, DHO, Voigt}]**
   - **‘Corrections’ [string]**: text describing any corrections that is applied to the fitted data (e.g. for NA broadening, deconvolution, etc.)
   
-- **'/Data_{n}/Calibration'** (optional group) it contains the following arrays; N.B. if the whole calibration group (or an individual {m} array) is the same as one in another Data_{n}, one could create a reference to that instead of repeating the data; that implies that, when writing to the file, one must be careful if there are multiple links pointing at the same object:
-  - **‘Index’ [int]**: 1D or 3D array (depending on whether ‘Sparse’ is true or false) containing a zero-based index which associates the spatial dimensions of the ‘PSD’ array to the first dimension of ‘/Data_{n}/Calibration/{m}’ (the idea being that, if multiple calibration spectra are acquired while imaging, we need to know which calibration data is used for the current spectrum)
-  - **'{m}' [float]**: a 2D array where the first dimension is associated to '/Data_{n}/Calibration/index' (i.e. if multiple calibration spectra are acquired during imaging) and the second dimension contains the spectrum; in case there are multiple calibration materials (or reference frequency, e.g. in case of EOMs) multiple datasets {m} can be created (one for each material). It must have an attribute **'Shift' [float]**, which describes the Brillouin shift (or frequency) of the current calibration material.
+- **'/Data_{n}/Calibration'** (optional group) containing the calibration data; if the whole calibration group is the same as one in another Data_{n}, the data doesn't need to be duplicated but the ‘Same_as’ attribute can be used instead.
+It contains the following arrays:
+  - **'Index' [int]**: 1D or 3D array (depending on whether ‘Sparse’ is true or false) containing a zero-based index which associates the spatial dimensions of the ‘PSD’ array to the first dimension of ‘/Data_{n}/Calibration/{m}’ (the idea being that, if multiple calibration spectra are acquired while imaging, we need to know which calibration data is used for the current spectrum). 'Index' can be omitted if the arrays '{m}' contain a single spectrum.
+  - **'{m}' [float]**: a 2D array where the first dimension is associated to '/Data_{n}/Calibration/Index' (i.e. if multiple calibration spectra are acquired during imaging) and the second dimension contains the spectrum; in case a single calibration spectrum is acquired, the array must still be 2D with the first dimension being a singleton.
+  In case there are multiple calibration materials (or reference frequency, e.g. in case of EOMs) multiple datasets {m} can be created (one for each material).
+  It must have an attribute **'Shift' [float]**, which describes the Brillouin shift (or frequency) of the current calibration material.
   - **‘Timestamp_{m}’ [float]** (optional): a 1D array with the same length as the first dimension of ‘/Data_{n}/Calibration/{m}’ which contains the milliseconds elapsed from ‘/Data_{n}/Calibration/Datetime’.
   - **'Raw\_data'** (optional group): a group containing the raw data that are used to generate the calibration spectra; it should have the same structure as '/Data_{n}/Raw\_data', if possible.
 
   It also contains the following attributes:
+  - **‘Same_as’ [int]** (optional): contains the number `n` to indicate that the calibration data is the same as '/Data_{n}/Calibration'; in this case this group can be empty
   - **‘Description’ [string]** (optional): it describes how the calibration is performed
   - **‘Temperature’ [float]** (optional): the temperature of the calibration material (if relevant)
   - **'Datetime' [string]** (optional): a [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) representation of the time when the (first) calibration spectrum was acquired
