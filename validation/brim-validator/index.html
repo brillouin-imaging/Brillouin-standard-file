@@ -443,6 +443,22 @@
                 micropip.add_mock_package("zarr", "3.1.2");               
                 await micropip.install.callKwargs('brimfile>=1.5.0,<2.0.0', { deps: false });
 
+                // Create a mock numpy.typing module to avoid import errors
+                // TODO: Remove this workaround once brimfile is updated to defer type hints
+                await pyodide.runPythonAsync(`
+                import sys
+                import types
+
+                # Create a fake numpy.typing module with a dummy NDArray
+                numpy_mod = types.ModuleType("numpy")
+                numpy_typing_mod = types.ModuleType("numpy.typing")
+                numpy_typing_mod.NDArray = list # Use list as a placeholder for NDArray type hint 
+
+                numpy_mod.typing = numpy_typing_mod
+                sys.modules["numpy"] = numpy_mod
+                sys.modules["numpy.typing"] = numpy_typing_mod
+                `);
+
                 await pyodide.runPythonAsync(`
                     import os
                     # set environment variable to only import validation code
