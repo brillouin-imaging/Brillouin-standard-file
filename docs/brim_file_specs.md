@@ -1,4 +1,4 @@
-# Proposal for version 0.1 of the brim file format
+# Proposal for version 0.2 of the brim file format
 
 ## General description:
 The brim file format (brillouin imaging) is designed to store Brillouin spectral data along with the results of its analysis.
@@ -48,7 +48,7 @@ These time points are not limited to conventional time-lapse imaging but can als
 
 |   ---- ---- /Parameters [float] (optional)
 
-|   ---- ---- /Timestamp [float] (optional)
+|   ---- ---- /Metadata (optional)
 
 |   ---- ---- /Analysis\_{m}
 
@@ -90,7 +90,7 @@ These time points are not limited to conventional time-lapse imaging but can als
 
 ## Detailed description of the content of the file:
 - **‘/’** (root group) must have the following attributes:
-  - **‘brim_version’ [string]**: version of the specification that the current file complies with (e.g., '0.1'); the version must follow the conventions of [semantic versioning](https://semver.org/)
+  - **‘brim_version’ [string]**: version of the specification that the current file complies with (e.g., '0.2'); the version must follow the conventions of [semantic versioning](https://semver.org/)
   - **‘Subtype’ [string]** (optional): identifier of the specific subtype of the current file. The idea is that specific implementations of Brillouin might standardize additional groups, arrays, or attributes (features). Subtypes (and corresponding features) must be defined in ['brim_file_subtypes'](brim_file_subtypes.md); when present, it is recommended to also include 'Subtype_features'
   - **‘Subtype_features’ [string]** (optional): an array of strings listing all the features that the current subtype supports (as defined in ['brim_file_subtypes'](brim_file_subtypes.md))
   - **‘Authors’ [string]** (optional): information about the authors of the file (e.g. name, contact, etc...)
@@ -100,7 +100,13 @@ These time points are not limited to conventional time-lapse imaging but can als
 - **‘/Brillouin\_data’** (group) must have an attribute ‘Metadata’ containing the metadata, as defined in ['brim_file_metadata'](brim_file_metadata.md).
   
 All the following groups are inside the ‘/Brillouin\_data’ group:
-- **‘/Data_{n}’** (group) containing the data of the current timepoint; it doesn’t need to be necessarily a timepoint in a timelapse, it could also be a measurement at different temperature or whatever fits under the concept of subsequent measurements under different conditions (defined in the ‘Conditions’ attribute). It can have any of the attributes defined in ‘Metadata’ (if different), with the naming style ‘Type.AttributeName’; specifically, defining the ‘Experiment.Datetime’ attribute is recommended. If the file contains only a single timepoint, this group must still be defined and called ‘Data_0’. Additionally it might have the following attributes:
+- **‘/Data_{n}’** (group) containing the data of the current timepoint; it doesn’t need to be necessarily a timepoint in a timelapse, it could also be a measurement at different temperature or whatever fits under the concept of subsequent measurements under different conditions (defined in the ‘Conditions’ attribute). If the file contains only a single timepoint, this group must still be defined and called ‘Data_0’.
+
+  It can have an optional attribute **‘Metadata’** with the same nested object structure used by `/Brillouin_data` metadata (see ['brim_file_metadata'](brim_file_metadata.md)). This attribute is used to override metadata values only for the current `Data_{n}` group. Software should merge metadata hierarchically, where values defined in `/Data_{n}` override the corresponding global values in `/Brillouin_data`.
+
+  If a metadata value varies per scan position instead of being a scalar for the full `Data_{n}`, the containing metadata object should list the corresponding field name in its `_arrays` attribute (which is a list of strings), and the corresponding dataset must be stored under `/Data_{n}/Metadata/...` with the same hierarchy and key name.
+
+  Additionally it might have the following attributes:
   - **‘Sparse’ [bool]** (optional): indicates whether the data is on a 3D grid or sparse, which affects how ‘PSD’ and the arrays in ‘Analysis\_{m}’ are interpreted (see their definitions). N.B. "sparse" is used in the general meaning of not on a regular 3D grid (e.g. on a spiral). If not provided it defaults to false (i.e. the data is on a 3D grid)
   - **‘element_size’ [float]**: array with 3 elements containing the pixel size for z, y, x. It is optional when ‘Sparse’ is true
   - **'element_size_units' [string]**: string containing the units for all the dimensions in element_size (e.g. 'um'). It is recommended when 'element_size' is defined
@@ -119,7 +125,7 @@ All the following groups are inside the ‘/Brillouin\_data’ group:
   N.B. in principle, the 3D grid could be reconstructed from the array '/Scanning/Spatial\_map' (if present), but, when 'Sparse' is true, it is good to have '/Scanning/Cartesian\_visualisation' always defined to avoid computing the assignments of spectra to 3D coordinates every time and also to allow for different ways for reconstructing the image (in case it is useful)
 - **‘/Data_{n}/Parameters’ [float]** (optional): If ‘Sparse’ is false, in case ‘PSD’ has more than 4 dimensions (let’s call the number of dimensions of ‘PSD’ *n\_PSD*), ‘Parameters’ must have *n\_PSD-3* dimensions, where the first *n\_PSD-4* dimensions correspond to the parameters at which the spectra were acquired and the last one contains *n\_PSD-4* elements storing the actual values of the parameters (e.g. for an angle-resolved measurement the angle at which the spectrum was acquired). If ‘Sparse’ is true the same logic applies but with 2 less dimensions. It must also have the following attributes:
     - **‘Name’ [string]**: a 1D array with size *n\_PSD*-4 containing the names of the parameters including the unit (e.g. ‘Angle_deg’)
-- **‘/Data_{n}/Timestamp’ [float]** (optional): milliseconds from the beginning of the experiment, as defined in the ‘datetime’ attribute of the current ‘Data_{n}’ group (if defined, or arbitrary otherwise) when the current spectrum was acquired
+- **‘/Data_{n}/Metadata’** (optional group): contains per-position metadata arrays for metadata fields listed in the `_arrays` attribute of the `Metadata` object of `/Data_{n}`. Nested groups and dataset names must mirror the metadata hierarchy (for example `/Data_{n}/Metadata/Experiment/Temperature`). The dataset shape should match the spatial dimensions of `/Data_{n}/PSD` (or the sparse point dimension when `Sparse` is true).
 - **‘/Data_{n}/Analysis\_{m}’** (group) contains the results of the analysis on the spectral data; the index 'm' allows for the case of multiple pipelines being performed on the same data (in that case a group for each of them must be created).
   - **'Thumbnail'** (optional): an image that can be used to show a preview of this specific 'Analysis\_{m}' group. It can be a 2D array for grayscale or 3D where the last channel represents the color (RGB).
   

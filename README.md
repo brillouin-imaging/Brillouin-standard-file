@@ -50,6 +50,7 @@ The following tools support `.brim` data:
 ## Repository Contents
 
 - [docs/brim_file_specs.md](docs/brim_file_specs.md): Latest `.brim` file format specification.
+- [CHANGELOG.md](CHANGELOG.md): Versioned list of specification changes.
 - [examples/](examples/): Example files grouped by `.brim` version.
 
 ## Community Contributions

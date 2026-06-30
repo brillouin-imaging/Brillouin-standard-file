@@ -1,4 +1,4 @@
-# Definition of subtypes and features in version 0.1 of the brim file format
+# Definition of subtypes and features in version 0.2 of the brim file format
 
 The purpose of defining subtypes is to allow specific techniques to define additional groups, arrays, or attributes (generally called "features") to store technique-specific data and metadata.
 
