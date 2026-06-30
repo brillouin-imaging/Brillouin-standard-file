@@ -1,56 +1,66 @@
-# Specification for brim file format to store data from Brillouin microscopy
-The aim of this repository is to define and discuss a standard file format for Brillouin microscopy.
+# brim File Format Specification for Brillouin Microscopy
 
-## What is Brillouin microscopy?
-Brillouin microscopy is essentially a hyperspectral imaging technique which extends Brillouin spectroscopy to microscopy.
-In recent years it has found increasing applications in biomedical imaging for its potential of assessing the mechanical
-properties of various biological samples (for more information you can find many reviews about the topic,
-e.g. [Kabakova et al 2024](https://doi.org/10.1038/s43586-023-00286-z) and [Prevedel et al. 2019](https://doi.org/10.1038/s41592-019-0543-3)).
-Different approaches can be used to acquire the Brillouin signal (e.g. spontaneous, stimulated, time-domain) but ultimately
-they all collect a spectrum for each voxel in the image. Typically, few parameters are extracted from each spectrum 
-(e.g. Brillouin shift and width) and displayed as color maps.
+This repository defines and discusses a standard file format for Brillouin microscopy data.
 
-## Motivation for a standard file format
-As more and more data are produced from different instruments and various labs and commercial Brillouin microscopes
-are entering the market, we advocate for the establishment of a common file format to store the raw as well as processed
-Brillouin spectral data, together with metadata that is important to understand the context of any given experiment.
+## What Is Brillouin Microscopy?
 
-This repository contains a proposal for a file format that contains all the necessary information to analyze/interpret 
-Brillouin data in a standard way while being flexible to accommodate data from different approaches/setups.
-We expect this standardization in file format to significantly facilitate collaborations, mutual comparisons of experimental results,
-as well as promote more universal and collaborative development of software for data analysis and visualization.
+Brillouin microscopy is a hyperspectral imaging technique that extends Brillouin spectroscopy to microscopy.
+In recent years, it has seen increasing use in biomedical imaging because of its potential to assess the mechanical
+properties of biological samples. For background, see reviews such as [Kabakova et al., 2024](https://doi.org/10.1038/s43586-023-00286-z)
+and [Prevedel et al., 2019](https://doi.org/10.1038/s41592-019-0543-3).
 
-## What to use as a container
-The proposed file format requires a hierarchical structure, together with the possibility of attaching metadata to individual elements in the file.
+Different acquisition approaches can be used (for example, spontaneous, stimulated, and time-domain), but all of them
+ultimately collect a spectrum for each voxel in an image. A small set of parameters is typically extracted from each
+spectrum (for example, Brillouin shift and width) and displayed as color maps.
 
-One option that we considered at first was to use the [HDF5 file](https://www.hdfgroup.org/solutions/hdf5/) format,
-as it is specifically designed to store data and metadata in a hierarchical and self-explanatory manner.
-Furthermore, it is already used in many industries and scientific fields and also supported by many popular languages.
+## Why a Standard File Format?
 
-One drawback of the HDF5 file is that it was not natively designed for cloud and parallel I/O, both features that Brillouin spectral data can benefit from.
-The [Zarr](https://zarr.dev/) file format is [inspired by the same principles of HDF5](https://medium.com/open-source-science-initiative/why-i-zarr-ee64eb7ffbf8) but overcomes the mentioned limitations. 
-Therefore, also based on the discussion in [issue #1](https://github.com/brillouin-imaging/Brillouin-standard-file/issues/1),
-we advocate for the use of Zarr as a container for the brim file and we plan to only fully support Zarr.
+As Brillouin data production grows across instruments, laboratories, and commercial systems, a common format becomes
+essential. The goal is to store both raw and processed Brillouin spectral data, together with the metadata needed to
+understand the context of each experiment.
 
-## How to read/write to brim files
-We developed a web app ([BrimView](https://biobrillouin.org/brimview/)) to visualize and process brim files. If you encounter any problem with it, you can open a [GitHub issue](https://github.com/brillouin-imaging/BrimView/issues). 
+This repository proposes a format that includes the information needed to analyze and interpret Brillouin data in a
+consistent way, while remaining flexible enough to support different acquisition approaches and hardware setups.
+We expect this standardization to facilitate collaboration, improve cross-study comparisons, and support broader software
+development for analysis and visualization.
 
-You can use the [brimfile package](https://pypi.org/project/brimfile/), which provides an easy interface to the latest version of the brim file in Python.
-If you encounter any issue with using the library or want to request additional features, you can create a GitHub issue on the page of [the project](https://github.com/brillouin-imaging/brimfile/issues).
+## Container Format
 
-We also developed a [Napari plugin](https://napari-hub.org/plugins/brillouin-imaging.html) and a [FIJI plugin](https://github.com/brillouin-imaging/brillouin-imaging-fiji), which can be used to open existing brim files.
+The proposed format requires a hierarchical structure and the ability to attach metadata to individual elements.
 
-## What is the content of this repository
-The file ['docs/brim_file_specs'](docs/brim_file_specs.md) describes the latest specifications for the brim file format.
+We initially considered [HDF5](https://www.hdfgroup.org/solutions/hdf5/) because it is well established for hierarchical,
+self-describing data and is widely supported across scientific fields and programming languages.
 
-The folder ['examples'](examples/) contains example files for a specific version of .brim.
+However, HDF5 was not originally designed for cloud-native and parallel I/O workflows, both of which are relevant for
+Brillouin spectral data. [Zarr](https://zarr.dev/), which is [inspired by principles similar to HDF5](https://medium.com/open-source-science-initiative/why-i-zarr-ee64eb7ffbf8), addresses these limitations.
+Based on this and the discussion in [issue #1](https://github.com/brillouin-imaging/Brillouin-standard-file/issues/1),
+we recommend Zarr as the container for `.brim` files and plan to fully support Zarr.
 
-## Input from the community is encouraged!
-People from the community are encouraged to provide suggestions on how to extend/modify the specifications to make the
-brim format suitable for data generated by different setups and adapt it to their needs. Please keep in mind that
-the content of the file should be as self-descriptive as possible to allow anyone to interpret the data without extra
-information and also, importantly, have a well-defined and common structure so that software can extract as much
-information as possible in an automated fashion.
+## Tools for Reading and Writing `.brim` Files
 
-To provide input or discuss specific issues you can create [GitHub
-issue](https://github.com/brillouin-imaging/Brillouin-standard-file/issues).
+The following tools support `.brim` data:
+
+- [BrimView](https://biobrillouin.org/brimview/): Web app for visualization and processing.
+	Report issues at the [BrimView issue tracker](https://github.com/brillouin-imaging/BrimView/issues).
+- [brimfile](https://pypi.org/project/brimfile/): Python package with a simple interface to the latest `.brim` specification.
+	Report issues or request features at the [brimfile issue tracker](https://github.com/brillouin-imaging/brimfile/issues).
+- [napari plugin](https://napari-hub.org/plugins/brillouin-imaging.html): Open existing `.brim` files in napari.
+- [FIJI plugin](https://github.com/brillouin-imaging/brillouin-imaging-fiji): Open existing `.brim` files in FIJI.
+
+## Repository Contents
+
+- [docs/brim_file_specs.md](docs/brim_file_specs.md): Latest `.brim` file format specification.
+- [examples/](examples/): Example files grouped by `.brim` version.
+
+## Community Contributions
+
+Community input is strongly encouraged. Suggestions for extending or refining the specification are welcome, especially
+to support data from different setups and workflows.
+
+When proposing changes, please aim to keep the format:
+
+- self-descriptive, so data can be interpreted without additional context;
+- consistently structured, so software can extract information reliably and automatically.
+
+To contribute ideas or discuss specific topics, open an issue in the
+[repository issue tracker](https://github.com/brillouin-imaging/Brillouin-standard-file/issues).
