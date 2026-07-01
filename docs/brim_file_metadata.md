@@ -35,6 +35,7 @@ The `Metadata` attribute in `/Brillouin_data` has the following hierarchy (in JS
 ## Detailed description of the metadata in the file
 - **'/Experiment'** has the following nested attributes:
   - **'Datetime' [string]** (optional): [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) datetime when the experiment was started
+  - **'Timestamp' [float]** (optional): When used as array metadata, it indicates the elapsed time in milliseconds from the start of the experiment (defined by the `Datetime` attribute of the current `Data_{n}` group, if available; otherwise an arbitrary reference) at which the current spectrum was acquired. When used as an attribute, it indicates the elapsed milliseconds from the general metadata `Datetime`
   - **'Temperature' [float]** (optional, units required): the temperature measured as close as possible to the sample
   - **'Temperature_uncertainty' [float]** (optional, units required)
   - **'Sample' [string]** (optional): description of the sample being imaged
