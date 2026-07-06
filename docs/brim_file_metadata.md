@@ -11,9 +11,11 @@ The units use the same conventions defined in the [main document](brim_file_spec
 
 Metadata are defined globally in the `Metadata` attribute attached to `/Brillouin_data`.
 
-Each `/Data_{n}` group can optionally define its own `Metadata` attribute using the exact same nested-object structure. The effective metadata for a specific measurement is obtained by hierarchical merge, where values in `/Data_{n}` override global values from `/Brillouin_data`.
+Each group or array can optionally define its own `Metadata` attribute using the same nested-object structure. The effective metadata for a specific measurement is obtained by a hierarchical merge, where values lower in the hierarchy override values higher in the hierarchy.
 
-When a metadata value is not a single scalar/string for the full measurement but varies per position, the containing metadata object must list the corresponding field name in an `_arrays` attribute. The data itself must be stored as a dataset under `/Data_{n}/Metadata/...` using the same hierarchy and key name.
+The override mechanism applies consistently at all levels of the file hierarchy. In particular, `/Data_{n}` can override metadata inherited from `/Brillouin_data`, and `/Data_{n}/Calibration` can override metadata inherited from `/Data_{n}`.
+
+When a metadata value is not a single scalar or string for the full measurement but varies per position, the containing metadata object must list the corresponding field name in an `_arrays` attribute. The data itself must be stored as a dataset under the matching `Metadata` group using the same hierarchy and key name.
 
 Example:
 

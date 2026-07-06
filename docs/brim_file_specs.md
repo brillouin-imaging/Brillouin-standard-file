@@ -20,6 +20,7 @@ These time points are not limited to conventional time-lapse imaging but can als
 - Datetimes must be represented as a string in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format
 - For arrays that require units, an attribute named 'units' that contains the name of the units as a string must be attached to the array; if an attribute (e.g., named 'attribute_x') needs units, one must add another attribute called 'attribute_x_units' at the same hierarchical level and store the name of the unit as a string
 - Enums should be stored as strings (but preferably the library used to generate the brim file should still expose enums to the user to avoid typos in the names of the elements)
+- Each group or array can have a `Metadata` attribute attached to it. `Metadata` can redefine attributes already present at a higher hierarchical level, with the idea that attributes defined lower in the hierarchy take priority; more details can be found in ['brim_file_metadata'](brim_file_metadata.md)
 
 ## Structure:
 |   /
@@ -102,7 +103,7 @@ These time points are not limited to conventional time-lapse imaging but can als
 All the following groups are inside the ‘/Brillouin\_data’ group:
 - **‘/Data_{n}’** (group) containing the data of the current timepoint; it doesn’t need to be necessarily a timepoint in a timelapse, it could also be a measurement at different temperature or whatever fits under the concept of subsequent measurements under different conditions (defined in the ‘Conditions’ attribute). If the file contains only a single timepoint, this group must still be defined and called ‘Data_0’.
 
-  It can have an optional attribute **‘Metadata’** with the same nested object structure used by `/Brillouin_data` metadata (see ['brim_file_metadata'](brim_file_metadata.md)). This attribute is used to override metadata values only for the current `Data_{n}` group. Software should merge metadata hierarchically, where values defined in `/Data_{n}` override the corresponding global values in `/Brillouin_data`.
+  It can have an optional attribute **‘Metadata’** with the same nested object structure used by `/Brillouin_data` metadata (see ['brim_file_metadata'](brim_file_metadata.md)). This attribute is used to override metadata values for the current `Data_{n}` group. Software should merge metadata hierarchically, where values defined in `/Data_{n}` override the corresponding values inherited from `/Brillouin_data`.
 
   If a metadata value varies per scan position instead of being a scalar for the full `Data_{n}`, the containing metadata object should list the corresponding field name in its `_arrays` attribute (which is a list of strings), and the corresponding dataset must be stored under `/Data_{n}/Metadata/...` with the same hierarchy and key name.
 
@@ -150,12 +151,15 @@ It contains the following arrays:
   - **'{m}' [float]**: a 2D array where the first dimension is associated to '/Data_{n}/Calibration/Index' (i.e. if multiple calibration spectra are acquired during imaging) and the second dimension contains the spectrum; in case a single calibration spectrum is acquired, the array must still be 2D with the first dimension being a singleton.
   In case there are multiple calibration materials (or reference frequency, e.g. in case of EOMs) multiple datasets {m} can be created (one for each material).
   It must have an attribute **'Shift' [float]**, which describes the Brillouin shift (or frequency) of the current calibration material.
-  - **‘Timestamp_{m}’ [float]** (optional): a 1D array with the same length as the first dimension of ‘/Data_{n}/Calibration/{m}’ which contains the milliseconds elapsed from ‘/Data_{n}/Calibration/Datetime’.
   - **'Raw\_data'** (optional group): a group containing the raw data that are used to generate the calibration spectra; it should have the same structure as '/Data_{n}/Raw\_data', if possible.
 
   It also contains the following attributes:
   - **‘Same_as’ [int]** (optional): contains the number `n` to indicate that the calibration data is the same as '/Data_{n}/Calibration'; in this case this group can be empty
-  - **‘Description’ [string]** (optional): it describes how the calibration is performed
-  - **‘Temperature’ [float]** (optional): the temperature of the calibration material (if relevant)
-  - **'Datetime' [string]** (optional): a [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) representation of the time when the (first) calibration spectrum was acquired
-  - **‘FSR’ [float]** (optional): The free spectral range of the spectrometer (in case it is a parameter that is used for calibration)
+  - **‘Metadata’ [json object]** (optional) which may contain the following attributes:
+    - **‘Description’ [string]** (optional): it describes how the calibration is performed
+    - **‘Temperature’ [float]** (optional): the temperature of the calibration material (if relevant)
+    - **'Datetime' [string]** (optional): a [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) representation of the time when the (first) calibration spectrum was acquired
+    - **‘FSR’ [float]** (optional): The free spectral range of the spectrometer (in case it is a parameter that is used for calibration)    
+    - **‘Timestamp’ [float]** (optional): a 1D array, defined via `_arrays` (see the [metadata spec](brim_file_metadata.md#metadata-scopes-and-overrides)), with the same length as the first dimension of `/Data_{n}/Calibration/{m}` and containing the milliseconds elapsed from the `Datetime` metadata attribute of the current `Calibration` group or the parent `Data_{n}` group. It can be defined at either the `/Data_{n}/Calibration` level or the `/Data_{n}/Calibration/{m}` level.
+
+    As per general rule, `Metadata` can also be defined at the level of the individual `{m}` groups.
