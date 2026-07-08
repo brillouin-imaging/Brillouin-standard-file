@@ -80,6 +80,13 @@
             body:not(.loading) #loading-overlay {
                 display: none;
             }
+            .site-footer {
+                border-top: 1px solid #e5e5e5;
+                color: #666;
+                font-size: 0.95rem;
+                padding: 14px 0;
+                margin-top: 32px;
+            }
         </style>
     </head>
     <body class="loading">
@@ -118,6 +125,11 @@
                 </div>
             </div>
         </div>
+        <footer class="site-footer">
+            <div class="container text-center">
+                <span>Using brimfile version: </span><span style="font-weight: bold;" id="brimfile-version">loading...</span>
+            </div>
+        </footer>
        <script type="module">
             import { ZarrFile, init_file } from "https://cdn.jsdelivr.net/gh/brillouin-imaging/brimfile@main/src/js/zarr_file.js";
 
@@ -424,6 +436,14 @@
                 pyodide: false,
             };
 
+            function setBrimfileVersionLabel(versionText) {
+                const versionElem = document.getElementById("brimfile-version");
+                if (!versionElem) {
+                    return;
+                }
+                versionElem.textContent = versionText;
+            }
+
             function hideLoadingOverlayWhenReady() {
                 if (scriptReadiness.module && scriptReadiness.pyodide) {
                     document.body.classList.remove("loading");
@@ -459,6 +479,12 @@
                 sys.modules["numpy.typing"] = numpy_typing_mod
                 `);
 
+                const brimfileVersion = pyodide.runPython(`                    
+                    from brimfile import __version__
+                    __version__                    
+                `);
+                setBrimfileVersionLabel(`${brimfileVersion}`);
+
                 await pyodide.runPythonAsync(`
                     import os
                     # set environment variable to only import validation code
@@ -491,6 +517,7 @@
             setupPyodide()
                 .catch((error) => {
                     console.error("Error setting up Pyodide:", error);
+                    setBrimfileVersionLabel(`unavailable`);
                 })
                 .finally(() => {
                     scriptReadiness.pyodide = true;
