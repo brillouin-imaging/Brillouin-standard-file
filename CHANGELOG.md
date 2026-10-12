@@ -13,6 +13,7 @@ All notable changes to the `.brim` specification are documented in this file.
 - The metadata scope-and-override documentation now describes hierarchy-wide merging instead of only measurement-level overrides.
 - `_arrays` hint list for metadata objects in `GroupX` `Metadata` to indicate that listed values are stored as datasets under `/GroupX/Metadata/...`.
 - New `/Data_{n}/Metadata` group for per-position metadata arrays (for example `/Data_{n}/Metadata/Experiment/Temperature`).
+- Optional `Origin` metadata under `Acquisition` to place the 3D grid of a `Data_{n}` group in a global coordinate system. Like all metadata, they can be defined in `/Brillouin_data` and overridden in `/Data_{n}`.
 
 
 ### Notes for implementers

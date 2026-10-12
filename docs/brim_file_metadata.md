@@ -63,6 +63,7 @@ The `Metadata` attribute in `/Brillouin_data` has the following hierarchy (in JS
 - **'/Acquisition'** has the following nested attributes:
   - **'Scanning_strategy' [enum {other, point_scanning, line_scanning, light_sheet, time_resolved}]**
   - **'Acquisition_time' [float]** (units required): the time that takes to acquire a single 'unit', which is different depending on the scanning strategy (i.e. point, line, plane, A-line, etc.)
+  - **'Origin' [1D float array]** (optional): an array with 3 elements indicating the z, y, x absolute coordinates of the position where the acquisition started. Useful e.g. to define the physical position in a multi-well plate. As per general specs, it could be redifined in each Data_{n} group.
 - **'/Spectrometer'** has the following nested attributes:
   - **'IRF' [1D float array]** (optional): a 1D array containing the impulse response function of the spectrometer. It must have an attribute 'Frequency' [float] (with the corresponding 'Frequency_units' [string]) of the same length, containing the frequency axis.
   - **'IRF_frequency' [1D float array]** (optional): a 1D array containing the frequency axis for the IRF. It is required if the IRF is provided and must be of the same length as the IRF array. An attribute 'IRF_frequency_units' must also be defined.
